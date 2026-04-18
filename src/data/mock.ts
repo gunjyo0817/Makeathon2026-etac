@@ -80,6 +80,7 @@ export interface AgentAction {
   scheduledFor: string; // ISO
   priority: "high" | "medium" | "low";
   icon?: "phone";
+  kind?: "follow_up" | "history";
 }
 
 export type AttentionReason = "no_response" | "objection_detected" | "needs_manual_review" | "scheduling_mismatch";

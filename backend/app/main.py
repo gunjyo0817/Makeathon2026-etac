@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .happyrobot_client import HappyRobotClient
 from .schemas import (
+    FollowUpCallRequest,
     LeadCreate,
     ProductCreate,
     TableRowCreate,
@@ -234,6 +235,22 @@ async def get_latest_conversation_assignment(lead_id: str) -> Any:
             "assignedProductId": _pick(latest, "assigned_product_id", "assignedProductId"),
             "followUpDate": row_follow_up_date(latest),
             "row": latest,
+        }
+    except Exception as exc:
+        raise _to_http_error(exc) from exc
+
+
+@app.post("/api/follow-up/call")
+async def trigger_follow_up_call(payload: FollowUpCallRequest) -> Any:
+    customer_id = payload.customer_id.strip()
+    if not customer_id:
+        raise HTTPException(status_code=400, detail="customer_id is required")
+    try:
+        result = await client.trigger_phone_call(customer_id)
+        return {
+            "ok": True,
+            "customerId": customer_id,
+            "result": result,
         }
     except Exception as exc:
         raise _to_http_error(exc) from exc

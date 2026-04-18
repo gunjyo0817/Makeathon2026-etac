@@ -1,4 +1,4 @@
-import type { Channel, Message } from "@/data/mock";
+import type { AgentAction, Channel, Message } from "@/data/mock";
 
 export type TranscriptRow = {
   id?: string | number;
@@ -8,6 +8,10 @@ export type TranscriptRow = {
   customerId?: string | number;
   medium?: string;
   transcript?: string | unknown[];
+  summary?: string;
+  Summary?: string;
+  notes?: string;
+  note?: string;
 };
 
 type TranscriptTurn = {
@@ -51,6 +55,14 @@ function parseTranscriptPayload(raw: string | unknown[] | undefined): Transcript
   }
 }
 
+function transcriptRowSummary(row: TranscriptRow): string {
+  const directSummary =
+    [row.summary, row.Summary, row.notes, row.note]
+      .find((value) => typeof value === "string" && value.trim())?.trim();
+  if (directSummary) return directSummary;
+  return "";
+}
+
 /** Build Message list from etac_transcript rows (sorted by row created_at, then turn order). */
 export function transcriptRowsToMessages(rows: TranscriptRow[], customerName: string): Message[] {
   const out: Message[] = [];
@@ -78,6 +90,33 @@ export function transcriptRowsToMessages(rows: TranscriptRow[], customerName: st
   }
 
   return out.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
+export function transcriptRowsToHistoryActions(rows: TranscriptRow[]): AgentAction[] {
+  return [...rows]
+    .sort((a, b) => {
+      const at = new Date(a.created_at ?? a.createdAt ?? 0).getTime();
+      const bt = new Date(b.created_at ?? b.createdAt ?? 0).getTime();
+      return at - bt;
+    })
+    .map((row, index) => {
+      const createdAt = row.created_at ?? row.createdAt ?? new Date().toISOString();
+      return {
+        id: String(row.id ?? `transcript-history-${index}`),
+        title: `History date: ${new Date(createdAt).toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })}`,
+        reason: transcriptRowSummary(row),
+        scheduledFor: createdAt,
+        priority: "medium",
+        icon: "phone",
+        kind: "history",
+      };
+    });
 }
 
 export function dominantChannelFromMessages(messages: Message[]): Channel {
