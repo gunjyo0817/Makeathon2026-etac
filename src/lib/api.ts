@@ -133,3 +133,26 @@ export async function getLatestConversationAssignmentForLead(
     `/api/conversations/latest-assignment?lead_id=${q}`
   );
 }
+
+export type BookingSessionResponse = {
+  lead_id: string;
+  display_name: string;
+  email?: string | null;
+  company?: string | null;
+  available_slots: string[];
+  selected_slot?: string | null;
+  booking_confirmed: boolean;
+};
+
+export async function getBookingSession(token: string): Promise<BookingSessionResponse> {
+  const t = encodeURIComponent(token.trim());
+  return request<BookingSessionResponse>(`/api/booking/sessions/${t}`);
+}
+
+export async function confirmBookingSlot(token: string, slotStart: string): Promise<unknown> {
+  const t = encodeURIComponent(token.trim());
+  return request(`/api/booking/sessions/${t}/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ slot_start: slotStart }),
+  });
+}

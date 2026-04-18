@@ -1,9 +1,19 @@
 from typing import Any
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from .booking_service import (
+    BookingConfirmedPayload,
+    ConfirmBookingBody,
+    OutboundNotifyPayload,
+    PublishSlotsBody,
+    confirm_slot,
+    get_session,
+    set_available_slots,
+    upsert_session_from_webhook,
+)
 from .config import settings
 from .happyrobot_client import HappyRobotClient
 from .schemas import (
@@ -237,3 +247,141 @@ async def get_latest_conversation_assignment(lead_id: str) -> Any:
         }
     except Exception as exc:
         raise _to_http_error(exc) from exc
+
+
+def _public_booking_url(token: str) -> str:
+    base = (settings.public_app_base_url or "").strip().rstrip("/")
+    path = f"/book/{token}"
+    if not base:
+        return path
+    return f"{base}{path}"
+
+
+def _require_booking_webhook_secret(x_booking_webhook_secret: str | None) -> None:
+    want = (settings.booking_webhook_secret or "").strip()
+    if not want:
+        return
+    if (x_booking_webhook_secret or "").strip() != want:
+        raise HTTPException(status_code=401, detail="Invalid or missing X-Booking-Webhook-Secret")
+
+
+def _require_booking_service_secret(x_booking_service_secret: str | None) -> None:
+    want = (settings.booking_service_secret or "").strip()
+    if not want:
+        if settings.app_env == "dev":
+            return
+        raise HTTPException(status_code=503, detail="BOOKING_SERVICE_SECRET is not configured")
+    if (x_booking_service_secret or "").strip() != want:
+        raise HTTPException(status_code=401, detail="Invalid or missing X-Booking-Service-Secret")
+
+
+async def _post_happyrobot_outbound(payload: dict[str, Any]) -> dict[str, Any]:
+    url = (settings.happyrobot_outbound_webhook_url or "").strip()
+    if not url:
+        return {"notified": False, "reason": "happyrobot_outbound_webhook_url unset"}
+    async with httpx.AsyncClient(timeout=settings.happyrobot_timeout_seconds) as ac:
+        response = await ac.post(url, json=payload)
+        response.raise_for_status()
+    try:
+        downstream: Any = response.json() if response.content else {}
+    except Exception:
+        downstream = {"raw": response.text}
+    return {"notified": True, "downstream": downstream}
+
+
+@app.post("/api/webhooks/happyrobot/lead")
+async def happyrobot_lead_webhook(
+    request: Request,
+    x_booking_webhook_secret: str | None = Header(None),
+) -> dict[str, Any]:
+    """HappyRobot POSTs lead payload; we create a booking session and return the public URL."""
+    _require_booking_webhook_secret(x_booking_webhook_secret)
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Expected JSON body") from None
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Body must be a JSON object")
+    try:
+        session = upsert_session_from_webhook(body)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    booking_url = _public_booking_url(session.token)
+    return {
+        "ok": True,
+        "lead_id": session.lead_id,
+        "booking_token": session.token,
+        "booking_url": booking_url,
+    }
+
+
+@app.post("/api/booking/publish-slots")
+async def booking_publish_slots(
+    body: PublishSlotsBody,
+    x_booking_service_secret: str | None = Header(None),
+) -> dict[str, Any]:
+    """Sales sets available times; we store them and POST to HappyRobot outbound webhook."""
+    _require_booking_service_secret(x_booking_service_secret)
+    session = set_available_slots(body.lead_id, body.available_slots)
+    if not session:
+        raise HTTPException(status_code=404, detail="Unknown lead_id — call the lead webhook first")
+    booking_url = _public_booking_url(session.token)
+    payload = OutboundNotifyPayload(
+        event="availability_published",
+        lead_id=session.lead_id,
+        email=session.email,
+        full_name=session.full_name,
+        available_slots=session.available_slots,
+        booking_url=booking_url,
+        booking_token=session.token,
+    )
+    notify = await _post_happyrobot_outbound(payload.model_dump())
+    return {
+        "ok": True,
+        "lead_id": session.lead_id,
+        "booking_url": booking_url,
+        "available_slots": session.available_slots,
+        **notify,
+    }
+
+
+@app.get("/api/booking/sessions/{token}")
+async def booking_get_session(token: str) -> dict[str, Any]:
+    session = get_session(token)
+    if not session:
+        raise HTTPException(status_code=404, detail="Invalid or expired booking link")
+    return {
+        "lead_id": session.lead_id,
+        "display_name": session.full_name or "Guest",
+        "email": session.email,
+        "company": session.company,
+        "available_slots": session.available_slots,
+        "selected_slot": session.selected_slot,
+        "booking_confirmed": session.selected_slot is not None,
+    }
+
+
+@app.post("/api/booking/sessions/{token}/confirm")
+async def booking_confirm(token: str, body: ConfirmBookingBody) -> dict[str, Any]:
+    slot = body.slot_start.strip()
+    session = confirm_slot(token, slot)
+    if not session:
+        raise HTTPException(
+            status_code=400,
+            detail="Unknown token or slot not in available_slots",
+        )
+    booking_url = _public_booking_url(session.token)
+    payload = BookingConfirmedPayload(
+        lead_id=session.lead_id,
+        email=session.email,
+        selected_slot=session.selected_slot or slot,
+        booking_token=session.token,
+    )
+    notify = await _post_happyrobot_outbound(payload.model_dump())
+    return {
+        "ok": True,
+        "lead_id": session.lead_id,
+        "selected_slot": session.selected_slot,
+        "booking_url": booking_url,
+        **notify,
+    }

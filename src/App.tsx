@@ -13,6 +13,7 @@ import Meetings from "./pages/Meetings.tsx";
 import Analytics from "./pages/Analytics.tsx";
 import Settings from "./pages/Settings.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import LeadBooking from "./pages/LeadBooking.tsx";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/book/:token" element={<LeadBooking />} />
           <Route path="/" element={<Index />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetail />} />
