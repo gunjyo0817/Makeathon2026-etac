@@ -13,7 +13,7 @@ export function ControlPanel({ initialPaused }: { initialPaused: boolean }) {
         </div>
         <div>
           <div className="text-sm font-bold leading-none">Control Panel</div>
-          <div className="text-[11px] text-muted-foreground mt-1">Override or supervise Aura's actions</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Override or supervise Etac's actions</div>
         </div>
       </div>
 

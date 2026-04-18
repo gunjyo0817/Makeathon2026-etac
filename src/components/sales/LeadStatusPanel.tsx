@@ -17,7 +17,7 @@ export function LeadStatusPanel({ lead }: { lead: Lead }) {
         </div>
         <div>
           <div className="text-sm font-bold leading-none">Lead Intelligence</div>
-          <div className="text-[11px] text-muted-foreground mt-1">Structured data captured by Aura</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Structured data captured by Etac</div>
         </div>
       </div>
 

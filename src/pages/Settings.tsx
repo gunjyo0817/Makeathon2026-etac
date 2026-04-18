@@ -83,7 +83,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
 function ProfileSection() {
   return (
     <>
-      <SectionHeader title="Profile" desc="How your teammates and customers see you in Aura." />
+      <SectionHeader title="Profile" desc="How your teammates and customers see you in Etac." />
       <div className="flex items-center gap-5">
         <div className="size-20 rounded-full bg-gradient-clay text-primary-foreground flex items-center justify-center font-bold text-2xl shadow-clay">ET</div>
         <div className="flex flex-col gap-1.5">
@@ -96,7 +96,7 @@ function ProfileSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <Field label="Full name"><Input defaultValue="Elias Thorne" /></Field>
         <Field label="Title"><Input defaultValue="Director of Sales" /></Field>
-        <Field label="Email"><Input type="email" defaultValue="elias@aura.ai" /></Field>
+        <Field label="Email"><Input type="email" defaultValue="elias@etac.ai" /></Field>
         <Field label="Timezone"><Input defaultValue="America/Los_Angeles" /></Field>
       </div>
       <div className="flex justify-end gap-2 pt-2">
@@ -115,7 +115,7 @@ function NotificationsSection() {
 
   return (
     <>
-      <SectionHeader title="Notifications" desc="Decide what Aura should ping you about." />
+      <SectionHeader title="Notifications" desc="Decide what Etac should ping you about." />
       <div className="flex flex-col gap-3">
         <Toggle label="New hot leads" desc="When intent score crosses 80." value={hot} onChange={setHot} />
         <Toggle label="Meeting booked" desc="A customer accepts a meeting time." value={meetings} onChange={setMeetings} />
@@ -137,7 +137,7 @@ function IntegrationsSection() {
   ];
   return (
     <>
-      <SectionHeader title="Integrations" desc="Connect Aura to the tools your team already uses." />
+      <SectionHeader title="Integrations" desc="Connect Etac to the tools your team already uses." />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {items.map((i) => (
           <div key={i.name} className="border border-border rounded-2xl p-4 flex items-center gap-4">

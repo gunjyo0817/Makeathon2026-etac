@@ -50,7 +50,7 @@ export function MeetingTypeBadge({ type, className }: { type: MeetingType; class
 
 export function PriorityBadge({ priority }: { priority: "high" | "medium" | "low" }) {
   const map = {
-    high: { bg: "bg-destructive/10", text: "text-destructive", label: "High" },
+    high: { bg: "bg-destructive-soft", text: "text-destructive-ink", label: "High" },
     medium: { bg: "bg-warning-soft", text: "text-warning", label: "Medium" },
     low: { bg: "bg-muted", text: "text-muted-foreground", label: "Low" },
   }[priority];

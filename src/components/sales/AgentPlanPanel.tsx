@@ -12,7 +12,7 @@ export function AgentPlanPanel({ actions }: { actions: AgentAction[] }) {
         </div>
         <div className="flex-1">
           <div className="text-sm font-bold leading-none">Agent Plan</div>
-          <div className="text-[11px] text-muted-foreground mt-1">Next actions Aura will take autonomously</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Next actions Etac will take autonomously</div>
         </div>
       </div>
 

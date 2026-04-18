@@ -47,8 +47,8 @@ export function ConversationAttentionPanel({ items }: { items: ConversationAtten
 
 function ReasonBadge({ reason }: { reason: AttentionReason }) {
   const meta = {
-    no_response: { label: "No response", className: "bg-muted text-muted-foreground" },
-    objection_detected: { label: "Objection detected", className: "bg-destructive/10 text-destructive" },
+    no_response: { label: "No response", className: "bg-label-lavender text-label-lavender-foreground" },
+    objection_detected: { label: "Objection detected", className: "bg-destructive-soft text-destructive-ink" },
     needs_manual_review: { label: "Needs manual review", className: "bg-warning-soft text-warning" },
     scheduling_mismatch: { label: "Scheduling mismatch", className: "bg-info-soft text-info" },
   }[reason];

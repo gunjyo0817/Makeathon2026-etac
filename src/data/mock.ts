@@ -271,11 +271,11 @@ export const leads: Lead[] = [
     lastInteractionAt: iso(-23),
     currentChannel: "sms",
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "email", text: "Hi Sarah — I noticed Meridian recently expanded into the Pacific Northwest. We help logistics teams reduce dispatch overhead by 30%. Worth a quick chat?", timestamp: iso(-2880) },
+      { id: "m1", sender: "agent", senderName: "Etac AI", channel: "email", text: "Hi Sarah — I noticed Meridian recently expanded into the Pacific Northwest. We help logistics teams reduce dispatch overhead by 30%. Worth a quick chat?", timestamp: iso(-2880) },
       { id: "m2", sender: "customer", senderName: "Sarah Chen", channel: "email", text: "Hey — interesting timing. We're actually evaluating tools right now. Can you share more about how it integrates with our existing TMS?", timestamp: iso(-2700) },
-      { id: "m3", sender: "agent", senderName: "Aura AI", channel: "phone", text: "Quick call recap: MercuryGate is fully supported and onboarding is usually 2–3 weeks.", timestamp: iso(-220) },
+      { id: "m3", sender: "agent", senderName: "Etac AI", channel: "phone", text: "Quick call recap: MercuryGate is fully supported and onboarding is usually 2–3 weeks.", timestamp: iso(-220) },
       { id: "m4", sender: "customer", senderName: "Sarah Chen", channel: "sms", text: "We use MercuryGate. Also — what's the typical onboarding timeline?", timestamp: iso(-180) },
-      { id: "m5", sender: "agent", senderName: "Aura AI", channel: "sms", text: "MercuryGate is fully supported. I can send a few times for a 20-min walkthrough — does Thursday or Friday afternoon work?", timestamp: iso(-23) },
+      { id: "m5", sender: "agent", senderName: "Etac AI", channel: "sms", text: "MercuryGate is fully supported. I can send a few times for a 20-min walkthrough — does Thursday or Friday afternoon work?", timestamp: iso(-23) },
     ],
     actions: [
       { id: "a1", title: "Send meeting link with 3 time slots", reason: "Lead replied positively but has not chosen a meeting slot yet.", scheduledFor: iso(60), priority: "high" },
@@ -290,9 +290,9 @@ export const leads: Lead[] = [
     lastInteractionAt: iso(-90),
     currentChannel: "phone",
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "email", text: "Marcus — saw your team is hiring 5 SDRs. Curious if you've considered AI-assisted prospecting?", timestamp: iso(-4320) },
+      { id: "m1", sender: "agent", senderName: "Etac AI", channel: "email", text: "Marcus — saw your team is hiring 5 SDRs. Curious if you've considered AI-assisted prospecting?", timestamp: iso(-4320) },
       { id: "m2", sender: "customer", senderName: "Marcus Webb", channel: "email", text: "Yes, evaluating now. Send me a deck.", timestamp: iso(-4000) },
-      { id: "m3", sender: "agent", senderName: "Aura AI", channel: "phone", text: "Call summary: deck sent, solutions architect looped in, and Thursday afternoon works for the demo.", timestamp: iso(-90) },
+      { id: "m3", sender: "agent", senderName: "Etac AI", channel: "phone", text: "Call summary: deck sent, solutions architect looped in, and Thursday afternoon works for the demo.", timestamp: iso(-90) },
     ],
     actions: [
       { id: "a1", title: "Confirm pricing tier with sales lead", reason: "Lead requested enterprise pricing — needs human approval.", scheduledFor: iso(30), priority: "high" },
@@ -308,9 +308,9 @@ export const leads: Lead[] = [
     lastInteractionAt: iso(-200),
     currentChannel: "sms",
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "email", text: "Elena — congrats on the Series C. Quick question: how is your team currently handling outbound to enterprise retail?", timestamp: iso(-7200) },
+      { id: "m1", sender: "agent", senderName: "Etac AI", channel: "email", text: "Elena — congrats on the Series C. Quick question: how is your team currently handling outbound to enterprise retail?", timestamp: iso(-7200) },
       { id: "m2", sender: "customer", senderName: "Elena Vasquez", channel: "email", text: "Manually, mostly. Open to a conversation.", timestamp: iso(-7000) },
-      { id: "m3", sender: "agent", senderName: "Aura AI", channel: "sms", text: "Booked you in for Thursday at 10:30am with our CEO. Calendar invite sent.", timestamp: iso(-200) },
+      { id: "m3", sender: "agent", senderName: "Etac AI", channel: "sms", text: "Booked you in for Thursday at 10:30am with our CEO. Calendar invite sent.", timestamp: iso(-200) },
     ],
     actions: [
       { id: "a1", title: "Send pre-meeting brief to CEO", reason: "Important enterprise meeting — internal prep needed.", scheduledFor: iso(-30), priority: "high" },
@@ -325,7 +325,7 @@ export const leads: Lead[] = [
     lastInteractionAt: iso(-1440),
     currentChannel: "sms",
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "sms", text: "James — following up on your data infra post. Worth a 15-min chat this week?", timestamp: iso(-1440) },
+      { id: "m1", sender: "agent", senderName: "Etac AI", channel: "sms", text: "James — following up on your data infra post. Worth a 15-min chat this week?", timestamp: iso(-1440) },
     ],
     actions: [
       { id: "a1", title: "Follow up in 2 days", reason: "Initial outreach unanswered. Soft second touch recommended.", scheduledFor: iso(2880), priority: "medium" },

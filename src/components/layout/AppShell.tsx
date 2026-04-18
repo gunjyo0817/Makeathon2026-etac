@@ -34,13 +34,13 @@ function Sidebar() {
           <Sparkles className="size-4" strokeWidth={2.5} />
         </div>
         <div>
-          <div className="font-bold tracking-tight text-lg leading-none">Aura</div>
+          <div className="font-bold tracking-tight text-lg leading-none">Etac</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Sales Control</div>
         </div>
       </div>
 
       <nav className="flex-1 px-3 flex flex-col gap-1">
-        <div className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mt-2">Workspace</div>
+        <div className="px-4 py-2 text-xs font-display font-semibold uppercase tracking-widest text-muted-foreground mt-2">Workspace</div>
         {nav.map((item) => {
           const active = item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to);
           return (
@@ -48,7 +48,7 @@ function Sidebar() {
               key={item.to}
               to={item.to}
               className={cn(
-                "px-4 py-2.5 rounded-2xl text-sm font-medium flex items-center gap-3 transition-colors",
+                "px-4 py-2.5 rounded-2xl text-sm font-display font-medium flex items-center gap-3 transition-colors",
                 active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"

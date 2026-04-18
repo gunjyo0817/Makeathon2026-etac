@@ -1,15 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
+/* Tobias — self-hosted (add .woff2 under public/fonts/tobias/, see public/fonts/tobias/README.txt) */
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Aura — Warm Soft Ceramic design system. All colors HSL. */
+/* Etac — design system. All colors HSL. */
 
 @layer base {
   :root {
+    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    --font-display: "Tobias", "Times New Roman", serif;
     /* Core surfaces */
-    --background: 36 33% 97%;            /* paper #FAF7F2 */
+    --background: 220 50% 82% / 10%;     /* #BAC9E8 @ 10% */
     --foreground: 18 14% 17%;            /* ink #322B27 */
 
     --card: 0 0% 100%;
@@ -18,10 +53,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 18 14% 17%;
 
-    /* Brand "clay" */
-    --primary: 17 56% 59%;               /* clay #D17B5B */
+    /* Brand — #7690CB semi-transparent */
+    --primary: 222 62% 38% / 40%;        /* deeper blue @ 40% */
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 17 64% 94%;          /* clay-light #F9EAE5 */
+    --primary-soft: 220 50% 82% / 50%;   /* #BAC9E8 @ 50% */
 
     --secondary: 36 25% 93%;             /* warm secondary surface */
     --secondary-foreground: 18 14% 17%;
@@ -29,25 +64,29 @@
     --muted: 36 23% 95%;                 /* column-bg #F4EFEA */
     --muted-foreground: 22 8% 49%;       /* ink-muted #857D77 */
 
-    --accent: 17 64% 94%;                /* clay-light */
-    --accent-foreground: 17 56% 45%;
+    --accent: 222 62% 38% / 40%;
+    --accent-foreground: 222 45% 35%;
 
     --destructive: 4 70% 56%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 36 24% 92%;                /* border-soft #EFECE6 */
     --input: 36 24% 92%;
-    --ring: 17 56% 59%;
+    --ring: 222 62% 38% / 40%;
 
-    --radius: 1rem;
+    --radius: 0.125rem;
 
-    /* Status palette */
-    --success: 84 23% 38%;               /* green-ink */
-    --success-soft: 79 35% 88%;          /* green-soft #E3EBD5 */
-    --warning: 33 58% 34%;               /* amber-ink */
-    --warning-soft: 38 79% 91%;          /* amber-soft #FAECD4 */
-    --info: 210 64% 47%;
-    --info-soft: 210 80% 94%;
+    /* Status / label palette (pastel swatches) */
+    --success: 142 42% 28%;              /* ink on #CDEBD8 */
+    --success-soft: 142 43% 86%;         /* #CDEBD8 */
+    --warning: 25 55% 30%;               /* ink on #FFD6B8 */
+    --warning-soft: 25 100% 86%;         /* #FFD6B8 */
+    --info: 224 55% 38%;                 /* ink on #C7D6FF */
+    --info-soft: 224 100% 89%;           /* #C7D6FF */
+    --destructive-soft: 0 100% 89%;      /* #FFC9C9 */
+    --destructive-ink: 350 48% 34%;      /* text on destructive-soft */
+    --label-lavender-bg: 243 100% 92%;   /* #D6D4FF — hover / neutral tag */
+    --label-lavender-fg: 243 38% 34%;
 
     /* Lead temperature */
     --temp-hot: 4 78% 58%;
@@ -57,18 +96,18 @@
     /* Sidebar tokens */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 18 14% 17%;
-    --sidebar-primary: 17 56% 59%;
+    --sidebar-primary: 222 62% 38% / 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 17 64% 94%;
-    --sidebar-accent-foreground: 17 56% 45%;
+    --sidebar-accent: 222 62% 38% / 24%;
+    --sidebar-accent-foreground: 222 45% 35%;
     --sidebar-border: 36 24% 92%;
-    --sidebar-ring: 17 56% 59%;
+    --sidebar-ring: 222 45% 63% / 50%;
 
     /* Shadows & gradients */
     --shadow-card: 0 4px 24px hsl(18 14% 17% / 0.04);
     --shadow-soft: 0 2px 8px hsl(18 14% 17% / 0.03);
-    --shadow-clay: 0 4px 14px hsl(17 56% 59% / 0.25);
-    --gradient-clay: linear-gradient(135deg, hsl(17 56% 59%), hsl(14 68% 55%));
+    --shadow-clay: 0 4px 14px hsl(222 62% 38% / 0.34);
+    --gradient-clay: linear-gradient(135deg, hsl(222 62% 38% / 0.62), hsl(220 50% 82% / 0.36));
   }
 
   .dark {
@@ -78,28 +117,38 @@
     --card-foreground: 36 25% 94%;
     --popover: 22 14% 12%;
     --popover-foreground: 36 25% 94%;
-    --primary: 17 56% 59%;
+    --primary: 222 62% 46% / 40%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 17 30% 22%;
+    --primary-soft: 222 30% 24%;
     --secondary: 22 12% 16%;
     --secondary-foreground: 36 25% 94%;
     --muted: 22 12% 14%;
     --muted-foreground: 22 8% 65%;
-    --accent: 17 30% 22%;
-    --accent-foreground: 17 64% 80%;
+    --accent: 222 30% 24%;
+    --accent-foreground: 220 45% 86%;
     --destructive: 4 70% 56%;
     --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 350 35% 22%;
+    --destructive-ink: 0 85% 82%;
+    --success-soft: 142 28% 18%;
+    --success: 142 50% 72%;
+    --warning-soft: 25 32% 18%;
+    --warning: 25 80% 72%;
+    --info-soft: 224 32% 20%;
+    --info: 224 75% 78%;
+    --label-lavender-bg: 243 28% 22%;
+    --label-lavender-fg: 243 65% 88%;
     --border: 22 10% 20%;
     --input: 22 10% 20%;
-    --ring: 17 56% 59%;
+    --ring: 222 62% 46% / 40%;
     --sidebar-background: 22 14% 11%;
     --sidebar-foreground: 36 25% 94%;
-    --sidebar-primary: 17 56% 59%;
+    --sidebar-primary: 222 62% 46% / 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 22 12% 18%;
     --sidebar-accent-foreground: 36 25% 94%;
     --sidebar-border: 22 10% 20%;
-    --sidebar-ring: 17 56% 59%;
+    --sidebar-ring: 222 45% 63% / 55%;
   }
 }
 
@@ -108,8 +157,20 @@
   html, body, #root { height: 100%; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 0.95;
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 700;
   }
 }
 
