@@ -75,6 +75,19 @@ export interface AgentAction {
   priority: "high" | "medium" | "low";
 }
 
+export type AttentionReason = "no_response" | "objection_detected" | "needs_manual_review" | "scheduling_mismatch";
+
+export interface ConversationAttentionItem {
+  id: string;
+  projectId: string;
+  leadId: string;
+  customerName: string;
+  company: string;
+  reason: AttentionReason;
+  summary: string;
+  lastMessageAt: string; // ISO
+}
+
 export interface Lead {
   id: string;
   projectId: string;
@@ -364,6 +377,59 @@ export const leads: Lead[] = [
     status: "responded", temperature: "hot", intentScore: 78,
     lastInteractionAt: iso(-50),
   }),
+];
+
+export const conversationsNeedingAttention: ConversationAttentionItem[] = [
+  {
+    id: "attn_1",
+    projectId: "p1",
+    leadId: "l4",
+    customerName: "James O'Connor",
+    company: "Nereus Bio",
+    reason: "no_response",
+    summary: "No reply after first outreach for 48 hours. Next touch likely needs a channel switch.",
+    lastMessageAt: iso(-2880),
+  },
+  {
+    id: "attn_2",
+    projectId: "p1",
+    leadId: "l7",
+    customerName: "Hannah Liu",
+    company: "Oculus Freight",
+    reason: "objection_detected",
+    summary: "Security and compliance objections detected. Customer asked for SOC2 and data retention details.",
+    lastMessageAt: iso(-440),
+  },
+  {
+    id: "attn_3",
+    projectId: "p2",
+    leadId: "l12",
+    customerName: "Margaret Holbrook",
+    company: "Brightline Industries",
+    reason: "needs_manual_review",
+    summary: "Enterprise pricing terms requested with legal redline language. Human review required.",
+    lastMessageAt: iso(-200),
+  },
+  {
+    id: "attn_4",
+    projectId: "p1",
+    leadId: "l1",
+    customerName: "Sarah Chen",
+    company: "Meridian Logistics",
+    reason: "scheduling_mismatch",
+    summary: "Lead asked for available slots, but none match their preferred time windows today.",
+    lastMessageAt: iso(-23),
+  },
+  {
+    id: "attn_5",
+    projectId: "p3",
+    leadId: "l13",
+    customerName: "Chris Bell",
+    company: "Tidewater Co.",
+    reason: "scheduling_mismatch",
+    summary: "Lead is open to book, but the proposed sales availability does not fit their schedule.",
+    lastMessageAt: iso(-50),
+  },
 ];
 
 // Aggregate today's meetings for calendar

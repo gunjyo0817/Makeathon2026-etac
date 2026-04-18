@@ -4,11 +4,16 @@ import { MetricsRow } from "@/components/sales/MetricsRow";
 import { ProjectSelector } from "@/components/sales/ProjectSelector";
 import { CalendarPanel } from "@/components/sales/CalendarPanel";
 import { PipelineBoard } from "@/components/sales/PipelineBoard";
-import { leads, projects } from "@/data/mock";
+import { ConversationAttentionPanel } from "@/components/sales/ConversationAttentionPanel";
+import { conversationsNeedingAttention, leads, projects } from "@/data/mock";
 
 export default function Dashboard() {
   const [projectId, setProjectId] = useState(projects[0].id);
   const filteredLeads = useMemo(() => leads.filter((l) => l.projectId === projectId), [projectId]);
+  const attentionItems = useMemo(
+    () => conversationsNeedingAttention.filter((item) => item.projectId === projectId),
+    [projectId]
+  );
 
   return (
     <AppShell>
@@ -25,6 +30,8 @@ export default function Dashboard() {
         </header>
 
         <MetricsRow />
+
+        <ConversationAttentionPanel items={attentionItems} />
 
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
           <PipelineBoard leads={filteredLeads} />
