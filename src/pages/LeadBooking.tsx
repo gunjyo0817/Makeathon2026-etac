@@ -48,11 +48,11 @@ function BookingPickGrid({
   onSelectCell: (pickId: string, slotStartIso: string) => void;
 }) {
   return (
-    <div className="overflow-x-auto max-h-[min(68vh,560px)] rounded-xl border border-border bg-card/40">
+    <div className="overflow-x-auto max-h-[min(62vh,560px)] rounded-xl border border-border bg-card/40">
       <div
-        className="grid min-w-[560px] md:min-w-[720px]"
+        className="grid min-w-[520px] sm:min-w-[600px] md:min-w-[720px]"
         style={{
-          gridTemplateColumns: `56px repeat(${dates.length}, minmax(88px, 1fr))`,
+          gridTemplateColumns: `52px repeat(${dates.length}, minmax(82px, 1fr))`,
         }}
       >
         <div className="border-b border-r border-border bg-background px-1 py-2" />
@@ -89,7 +89,7 @@ function BookingPickGrid({
                     onSelectCell(meta.pickId, meta.slotStartIso);
                   }}
                   className={cn(
-                    "relative min-h-[40px] border-r border-b border-border px-0.5 py-0.5 text-left transition-colors",
+                    "relative min-h-[44px] border-r border-b border-border px-0.5 py-0.5 text-left transition-colors",
                     !isOpen && "bg-muted/20 cursor-default",
                     isOpen && !isSelected && "cursor-pointer bg-success-soft/70 hover:bg-success-soft border-success/30",
                     isSelected && "cursor-pointer z-[1] bg-primary/20 ring-2 ring-inset ring-primary border-primary/50"
@@ -199,16 +199,16 @@ const LeadBooking = () => {
 
   if (booking_confirmed && selected_slot) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-muted p-4">
-        <Card className="w-full max-w-lg border-primary/20 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">You’re booked for a trial</CardTitle>
+      <div className="flex min-h-screen items-start justify-center bg-gradient-to-b from-background to-muted p-0 sm:items-center sm:p-4">
+        <Card className="h-[100dvh] w-full rounded-none border-0 shadow-none sm:h-auto sm:max-w-lg sm:rounded-xl sm:border sm:border-primary/20 sm:shadow-lg">
+          <CardHeader className="pt-8 sm:pt-6">
+            <CardTitle className="text-xl sm:text-2xl">You’re booked for a trial</CardTitle>
             <CardDescription>
               Hi {display_name}
               {company ? ` · ${company}` : ""}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-lg">
+          <CardContent className="space-y-2 text-base sm:text-lg">
             <p>
               <span className="text-muted-foreground">Time: </span>
               <span className="font-medium">{formatSlot(selected_slot)}</span>
@@ -221,19 +221,20 @@ const LeadBooking = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-muted p-4">
-      <Card className="w-full max-w-[960px] border-primary/15 shadow-lg">
-        <CardHeader>
+    <div className="flex min-h-screen items-start justify-center bg-gradient-to-b from-background to-muted p-0 sm:items-center sm:p-4">
+      <Card className="h-[100dvh] w-full rounded-none border-0 shadow-none sm:h-auto sm:max-w-[960px] sm:rounded-xl sm:border sm:border-primary/15 sm:shadow-lg">
+        <CardHeader className="px-4 pt-6 sm:px-6 sm:pt-6">
           <p className="text-xs font-medium uppercase tracking-wider text-primary">Etac</p>
-          <CardTitle className="text-2xl">Book an in-person trial</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl">Book an in-person trial</CardTitle>
           <CardDescription>
             Hi {display_name}
             {company ? ` · ${company}` : ""} — choose a time below (same calendar as our team). Tap a green slot, then confirm.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 px-4 pb-5 sm:space-y-6 sm:px-6 sm:pb-6">
           {hasCalendar ? (
             <>
+              <p className="text-xs text-muted-foreground sm:hidden">Swipe sideways to see more dates.</p>
               <BookingPickGrid
                 dates={visibleDates}
                 timeSlots={SALES_HALF_HOUR_SLOTS}
@@ -252,7 +253,7 @@ const LeadBooking = () => {
                 <p className="text-sm text-muted-foreground">Tap a green cell to pick your visit time.</p>
               )}
               <Button
-                className="w-full"
+                className="w-full sm:static sticky bottom-0 z-10"
                 size="lg"
                 disabled={!selected || mutation.isPending}
                 onClick={() => {
@@ -298,7 +299,7 @@ const LeadBooking = () => {
                 ))}
               </RadioGroup>
               <Button
-                className="w-full"
+                className="w-full sm:static sticky bottom-0 z-10"
                 size="lg"
                 disabled={!selected || mutation.isPending}
                 onClick={() => selected && mutation.mutate({ mode: "memory", selected })}
