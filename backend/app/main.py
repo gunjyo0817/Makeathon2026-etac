@@ -457,7 +457,7 @@ async def booking_confirm(token: str, body: ConfirmBookingBody) -> dict[str, Any
         prod = _coerce_int(body.product_id) or _coerce_int(
             match.get("product_id") or match.get("productId")
         )
-        name = (body.meeting_name or "").strip() or "Meeting"
+        name = (body.meeting_name or "").strip() or "In-person trial"
         # Twin schema for this org expects string fields for numeric columns.
         values: dict[str, Any] = {
             "lead_id": str(lead_int),

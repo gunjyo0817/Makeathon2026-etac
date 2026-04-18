@@ -278,7 +278,7 @@ export default function Meetings() {
       await queryClient.invalidateQueries({ queryKey: ["twin"] });
       setIsSpotsDialogOpen(false);
       setDragState(null);
-      toast.success("Saved availability to Twin");
+      toast.success("Saved trial availability to Twin");
     } catch (e) {
       toast.error((e as Error).message || "Save failed");
     } finally {
@@ -312,8 +312,10 @@ export default function Meetings() {
       <div className="px-8 pb-10 pt-2 flex flex-col gap-7 max-w-[1700px] mx-auto">
         <header className="flex items-end justify-between gap-6 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Meetings</h1>
-            <p className="text-muted-foreground mt-2 text-sm">Calendar-first scheduling for showroom visits, lead calls, and specification reviews.</p>
+            <h1 className="text-3xl font-bold tracking-tight">In-person trials</h1>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Calendar for showroom visits: paint when you’re available and see who booked an in-person trial.
+            </p>
             {selectedProduct ? (
               <div className="mt-3 inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
                 Viewing {selectedProduct.name}
@@ -359,14 +361,16 @@ export default function Meetings() {
             <Dialog open={isSpotsDialogOpen} onOpenChange={(open) => (open ? openSpotsDialog() : requestCloseSpotsDialog())}>
               <DialogTrigger asChild>
                 <button onClick={openSpotsDialog} className="h-10 px-4 rounded-2xl border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
-                  Available spots
+                  Trial availability
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-6xl rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle>Available spots</DialogTitle>
+                  <DialogTitle>Trial availability</DialogTitle>
                 </DialogHeader>
-                <p className="text-xs text-muted-foreground -mt-2">Drag across time cells to paint availability. Click and drag on green slots to remove.</p>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Drag to mark when leads can book an in-person trial. Drag on green cells to remove.
+                </p>
                 {viewMode === "month" ? (
                   <MonthGrid
                     dates={visibleDates}
@@ -483,7 +487,7 @@ export default function Meetings() {
                   </div>
                 </div>
               ))}
-              {groupedMeetings.length === 0 && <div className="text-sm text-muted-foreground">No meetings in this range.</div>}
+              {groupedMeetings.length === 0 && <div className="text-sm text-muted-foreground">No trials in this range.</div>}
             </div>
           </section>
         )}
@@ -493,7 +497,7 @@ export default function Meetings() {
             <AlertDialogHeader>
               <AlertDialogTitle>Discard changes?</AlertDialogTitle>
               <AlertDialogDescription>
-                You have unsaved available spot edits. If you close now, those changes will be lost.
+                You have unsaved trial availability edits. If you close now, those changes will be lost.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -510,7 +514,7 @@ export default function Meetings() {
             {selectedMeeting && selectedMeetingRecord && (
               <>
                 <DialogHeader>
-                  <DialogTitle>Meeting detail</DialogTitle>
+                  <DialogTitle>Trial detail</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 text-sm">
                   <div className="rounded-xl border border-border p-3">
@@ -565,7 +569,7 @@ export default function Meetings() {
                     onClick={() => setIsCancelConfirmOpen(true)}
                     className="h-10 px-4 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold hover:bg-destructive/10 transition-colors"
                   >
-                    Cancel meeting
+                    Cancel trial
                   </button>
                   <button
                     onClick={() => {
@@ -585,13 +589,13 @@ export default function Meetings() {
         <AlertDialog open={isCancelConfirmOpen} onOpenChange={setIsCancelConfirmOpen}>
           <AlertDialogContent className="rounded-2xl">
             <AlertDialogHeader>
-              <AlertDialogTitle>Cancel this meeting?</AlertDialogTitle>
-              <AlertDialogDescription>This marks the meeting as cancelled in the schedule.</AlertDialogDescription>
+              <AlertDialogTitle>Cancel this trial?</AlertDialogTitle>
+              <AlertDialogDescription>This marks the in-person trial as cancelled on the schedule.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-xl">Keep meeting</AlertDialogCancel>
+              <AlertDialogCancel className="rounded-xl">Keep trial</AlertDialogCancel>
               <AlertDialogAction onClick={applyCancel} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Cancel meeting
+                Cancel trial
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -754,8 +758,8 @@ function MonthGrid({
           >
             <div className="text-sm font-semibold tabular-nums">{date.getDate()}</div>
             <div className="mt-2 space-y-1">
-              <div className="text-[11px] text-muted-foreground">{meetings.length} meetings</div>
-              <div className="text-[11px] text-success">{spotCount} available spots</div>
+              <div className="text-[11px] text-muted-foreground">{meetings.length} trials</div>
+              <div className="text-[11px] text-success">{spotCount} open slots</div>
             </div>
           </button>
         );

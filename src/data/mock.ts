@@ -123,7 +123,7 @@ export const STATUS_COLUMNS: { id: LeadStatus; label: string }[] = [
   { id: "contacted", label: "Contacted" },
   { id: "responded", label: "Responded" },
   { id: "qualified", label: "Qualified" },
-  { id: "meeting", label: "Meeting Scheduled" },
+  { id: "meeting", label: "Trial scheduled" },
   { id: "closed", label: "Closed" },
 ];
 

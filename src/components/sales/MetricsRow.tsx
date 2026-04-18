@@ -74,12 +74,12 @@ export function MetricsRow({ productId }: { productId: string }) {
       ),
     },
     {
-      label: "Scheduled Meetings",
+      label: "Scheduled trials",
       value: meetings.length,
-      delta: meetings[0] ? `Next: ${formatMeetingTime(meetings[0].start)}` : "No upcoming meetings",
+      delta: meetings[0] ? `Next: ${formatMeetingTime(meetings[0].start)}` : "No upcoming trials",
       deltaTone: "neutral" as const,
       icon: Calendar,
-      detailTitle: "Scheduled Meetings",
+      detailTitle: "Scheduled trials",
       content: (
         <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {meetings.slice(0, 8).map((meeting) => (
