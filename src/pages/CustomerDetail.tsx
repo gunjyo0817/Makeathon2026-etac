@@ -18,7 +18,11 @@ import {
   type ProductRow,
 } from "@/lib/api";
 import { mapLeadRowToLead } from "@/lib/mapLeadRowToLead";
-import { dominantChannelFromMessages, transcriptRowsToMessages } from "@/lib/parseTranscriptToMessages";
+import {
+  dominantChannelFromMessages,
+  transcriptRowsToHistoryActions,
+  transcriptRowsToMessages,
+} from "@/lib/parseTranscriptToMessages";
 
 export default function CustomerDetail() {
   const { id } = useParams();
@@ -56,6 +60,7 @@ export default function CustomerDetail() {
         }
         const base = mapLeadRowToLead(row);
         const messages = transcriptRowsToMessages(transcriptRows, base.name);
+        const historyActions = transcriptRowsToHistoryActions(transcriptRows);
         const currentChannel =
           messages.length > 0 ? dominantChannelFromMessages(messages) : base.currentChannel;
         const followUpAction =
@@ -73,13 +78,14 @@ export default function CustomerDetail() {
                 scheduledFor: assignment.followUpDate,
                 priority: "medium" as const,
                 icon: "phone" as const,
+                kind: "follow_up" as const,
               }
             : null;
         setLead({
           ...base,
           messages,
           currentChannel,
-          actions: followUpAction ? [...base.actions, followUpAction] : base.actions,
+          actions: [...historyActions, ...(followUpAction ? [followUpAction] : []), ...base.actions],
         });
         const pid = row.product_id ?? row.productId;
         const assignedPid = assignment.assignedProductId;
@@ -139,6 +145,14 @@ export default function CustomerDetail() {
     );
   }
 
+  const handleFollowUpAlarmClick = () => {
+    console.log("Follow-up alarm clicked", {
+      leadId: routeId,
+      leadName: lead.name,
+      productName,
+    });
+  };
+
   return (
     <AppShell>
       <div className="px-8 pb-10 pt-2 flex flex-col gap-6 max-w-[1600px] mx-auto">
@@ -146,7 +160,7 @@ export default function CustomerDetail() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
           <div className="flex flex-col gap-6 min-w-0">
             <ConversationHistory lead={lead} />
-            <AgentPlanPanel actions={lead.actions} />
+            <AgentPlanPanel actions={lead.actions} onFollowUpAlarmClick={handleFollowUpAlarmClick} />
           </div>
           <div className="flex flex-col gap-6">
             <ControlPanel initialPaused={lead.agentPaused} />
