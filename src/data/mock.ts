@@ -14,6 +14,7 @@ export interface Project {
   id: string;
   name: string;
   description: string;
+  objective: string;
   leadCount: number;
   color: string; // tailwind text-color token
 }
@@ -122,9 +123,30 @@ export const STATUS_COLUMNS: { id: LeadStatus; label: string }[] = [
 ];
 
 export const projects: Project[] = [
-  { id: "p1", name: "AI SDR for SaaS", description: "Outbound to mid-market B2B SaaS", leadCount: 18, color: "text-primary" },
-  { id: "p2", name: "Enterprise Outreach", description: "Fortune 1000 strategic accounts", leadCount: 9, color: "text-info" },
-  { id: "p3", name: "Inbound Demo Requests", description: "Website demo form responses", leadCount: 12, color: "text-success" },
+  {
+    id: "p1",
+    name: "AI SDR for SaaS",
+    description: "Outbound to mid-market B2B SaaS",
+    objective: "Generate qualified pipeline from mid-market SaaS accounts and convert replies into booked demos.",
+    leadCount: 18,
+    color: "text-primary",
+  },
+  {
+    id: "p2",
+    name: "Enterprise Outreach",
+    description: "Fortune 1000 strategic accounts",
+    objective: "Open high-value enterprise conversations with strategic accounts and progress them to stakeholder meetings.",
+    leadCount: 9,
+    color: "text-info",
+  },
+  {
+    id: "p3",
+    name: "Inbound Demo Requests",
+    description: "Website demo form responses",
+    objective: "Qualify inbound demo requests quickly and route strong-fit prospects into fast booking flows.",
+    leadCount: 12,
+    color: "text-success",
+  },
 ];
 
 export const projectAgentConfigs: Record<string, ProjectAgentConfig> = {

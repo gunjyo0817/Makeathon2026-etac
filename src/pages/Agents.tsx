@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProjectSelector } from "@/components/sales/ProjectSelector";
 import { agents, getAgentByProjectId, projectAgentConfigs, projects } from "@/data/mock";
 import { Bot, Pause, Play, Settings2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "react-router-dom";
 import {
   Dialog,
   DialogClose,
@@ -16,12 +17,20 @@ import {
 } from "@/components/ui/dialog";
 
 export default function Agents() {
+  const [searchParams] = useSearchParams();
   const [projectId, setProjectId] = useState(projects[0].id);
   const [statuses, setStatuses] = useState<Record<string, "active" | "paused">>(() =>
     Object.fromEntries(agents.map((agent) => [agent.id, agent.status]))
   );
   const [agentOverrides, setAgentOverrides] = useState<Record<string, (typeof agents)[number]>>({});
   const [configOverrides, setConfigOverrides] = useState(projectAgentConfigs);
+
+  useEffect(() => {
+    const projectIdFromQuery = searchParams.get("projectId");
+    if (projectIdFromQuery && projects.some((project) => project.id === projectIdFromQuery)) {
+      setProjectId(projectIdFromQuery);
+    }
+  }, [searchParams]);
 
   const baseAgent = getAgentByProjectId(projectId);
   const agent = baseAgent ? agentOverrides[baseAgent.id] ?? baseAgent : undefined;

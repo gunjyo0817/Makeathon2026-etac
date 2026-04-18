@@ -30,7 +30,7 @@ export default function Projects() {
             return (
               <button
                 key={p.id}
-                onClick={() => navigate("/")}
+                onClick={() => navigate(`/projects/${p.id}`)}
                 className="text-left bg-card border border-border rounded-3xl p-6 shadow-card hover:shadow-clay hover:-translate-y-0.5 hover:border-primary/40 transition-all group flex flex-col gap-5"
               >
                 <div className="flex items-start justify-between">
