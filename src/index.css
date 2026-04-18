@@ -1,4 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* Tobias — self-hosted (add .woff2 under public/fonts/tobias/, see public/fonts/tobias/README.txt) */
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Tobias";
+  src: url("/fonts/tobias/Tobias-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
@@ -9,7 +42,7 @@
 @layer base {
   :root {
     --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-    --font-display: "Cormorant Garamond", "Times New Roman", serif;
+    --font-display: "Tobias", "Times New Roman", serif;
     /* Core surfaces */
     --background: 36 33% 97%;            /* paper #FAF7F2 */
     --foreground: 18 14% 17%;            /* ink #322B27 */
@@ -41,7 +74,7 @@
     --input: 36 24% 92%;
     --ring: 17 56% 59%;
 
-    --radius: 1rem;
+    --radius: 0.125rem;
 
     /* Status palette */
     --success: 84 23% 38%;               /* green-ink */

@@ -9,7 +9,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
-        display: ["Cormorant Garamond", "Times New Roman", "serif"],
+        display: ["Tobias", "Times New Roman", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -76,10 +76,10 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 4px)",
-        sm: "calc(var(--radius) - 8px)",
-        "2xl": "calc(var(--radius) + 8px)",
-        "3xl": "calc(var(--radius) + 16px)",
+        md: "max(0px, calc(var(--radius) - 2px))",
+        sm: "max(0px, calc(var(--radius) - 4px))",
+        "2xl": "calc(var(--radius) + 2px)",
+        "3xl": "calc(var(--radius) + 4px)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
