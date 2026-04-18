@@ -37,12 +37,12 @@ export function MetricsRow({ projectId }: { projectId: string }) {
       icon: Users,
       detailTitle: "Active Leads",
       content: (
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {activeLeads.slice(0, 8).map((lead) => (
             <li key={lead.id}>
               <button
                 onClick={() => navigate(`/leads/${lead.id}`)}
-                className="w-full text-left text-xs text-muted-foreground rounded-lg px-2 py-1.5 hover:bg-muted transition-colors"
+                className="w-full text-left text-xs text-muted-foreground px-3 py-2.5 hover:bg-muted transition-colors"
               >
                 {lead.name} - {lead.company}
               </button>
@@ -59,12 +59,12 @@ export function MetricsRow({ projectId }: { projectId: string }) {
       icon: CheckCircle2,
       detailTitle: "Qualified Leads",
       content: (
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {qualifiedLeads.slice(0, 8).map((lead) => (
             <li key={lead.id}>
               <button
                 onClick={() => navigate(`/leads/${lead.id}`)}
-                className="w-full text-left text-xs text-muted-foreground rounded-lg px-2 py-1.5 hover:bg-muted transition-colors"
+                className="w-full text-left text-xs text-muted-foreground px-3 py-2.5 hover:bg-muted transition-colors"
               >
                 {lead.name} - intent {lead.intentScore}
               </button>
@@ -81,12 +81,12 @@ export function MetricsRow({ projectId }: { projectId: string }) {
       icon: Calendar,
       detailTitle: "Scheduled Meetings",
       content: (
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {meetings.slice(0, 8).map((meeting) => (
             <li key={meeting.id}>
               <button
                 onClick={() => navigate(`/leads/${meeting.leadId}`)}
-                className="w-full text-left text-xs text-muted-foreground rounded-lg px-2 py-1.5 hover:bg-muted transition-colors"
+                className="w-full text-left text-xs text-muted-foreground px-3 py-2.5 hover:bg-muted transition-colors"
               >
                 {meeting.customerName} - {formatMeetingTime(meeting.start)}
               </button>
@@ -103,10 +103,11 @@ export function MetricsRow({ projectId }: { projectId: string }) {
       icon: TrendingUp,
       detailTitle: "Response Rate by Channel",
       content: (
-        <ul className="mt-2 space-y-1.5">
+        <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {channelRates.map((entry) => (
-            <li key={entry.channel} className="text-xs text-muted-foreground">
-              {entry.channel}: {entry.rate}%
+            <li key={entry.channel} className="text-xs text-muted-foreground px-3 py-2.5 flex items-center justify-between">
+              <span>{entry.channel}</span>
+              <span className="font-semibold text-foreground">{entry.rate}%</span>
             </li>
           ))}
         </ul>
