@@ -1,9 +1,9 @@
-import { projects } from "@/data/mock";
+import { products } from "@/data/mock";
 import { ChevronDown, Check, FolderKanban } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-export function ProjectSelector({
+export function ProductSelector({
   selectedId,
   onSelect,
 }: {
@@ -13,7 +13,7 @@ export function ProjectSelector({
   const [open, setOpen] = useState(false);
   const [alignEnd, setAlignEnd] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const selected = projects.find((p) => p.id === selectedId) ?? projects[0];
+  const selectedProduct = products.find((p) => p.id === selectedId) ?? products[0];
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +47,7 @@ export function ProjectSelector({
         </div>
         <div className="text-left min-w-0">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold leading-none">Active Product</div>
-          <div className="text-sm font-semibold mt-0.5 truncate">{selected.name}</div>
+          <div className="text-sm font-semibold mt-0.5 truncate">{selectedProduct.name}</div>
         </div>
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
@@ -61,7 +61,7 @@ export function ProjectSelector({
               alignEnd ? "right-0" : "left-0"
             )}
           >
-            {projects.map((p) => (
+            {products.map((p) => (
               <button
                 key={p.id}
                 onClick={() => {

@@ -1,11 +1,11 @@
-import { type Lead, getProjectById } from "@/data/mock";
+import { type Lead, getProductById } from "@/data/mock";
 import { StatusBadge, TemperatureBadge } from "@/components/sales/Badges";
 import { ArrowLeft, Mail, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function LeadHeader({ lead }: { lead: Lead }) {
   const navigate = useNavigate();
-  const project = getProjectById(lead.projectId);
+  const product = getProductById(lead.productId);
   return (
     <div className="bg-card border border-border rounded-3xl shadow-card p-6">
       <button
@@ -31,7 +31,7 @@ export function LeadHeader({ lead }: { lead: Lead }) {
           </div>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold bg-muted text-muted-foreground rounded-full px-2.5 py-1">
             <span className="size-1.5 rounded-full bg-primary" />
-            Product: {project?.name}
+            Product: {product?.name}
           </div>
         </div>
       </div>

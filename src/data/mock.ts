@@ -10,7 +10,7 @@ export type LeadStatus =
 export type MeetingType = "demo" | "follow-up" | "intro";
 export type Channel = "email" | "sms" | "phone";
 
-export interface Project {
+export interface Product {
   id: string;
   createdAt: string;
   name: string;
@@ -22,8 +22,8 @@ export interface Project {
   color: string; // tailwind text-color token
 }
 
-export interface ProjectAgentConfig {
-  projectId: string;
+export interface ProductAgentConfig {
+  productId: string;
   persona: string;
   dataKnowledge: string;
   dailyMessageLimit: number;
@@ -35,7 +35,7 @@ export interface ProjectAgentConfig {
 
 export interface AgentProfile {
   id: string;
-  projectId: string;
+  productId: string;
   name: string;
   initials: string;
   role: string;
@@ -85,7 +85,7 @@ export type AttentionReason = "no_response" | "objection_detected" | "needs_manu
 
 export interface ConversationAttentionItem {
   id: string;
-  projectId: string;
+  productId: string;
   leadId: string;
   customerName: string;
   company: string;
@@ -96,7 +96,7 @@ export interface ConversationAttentionItem {
 
 export interface Lead {
   id: string;
-  projectId: string;
+  productId: string;
   name: string;
   role: string;
   company: string;
@@ -125,7 +125,7 @@ export const STATUS_COLUMNS: { id: LeadStatus; label: string }[] = [
   { id: "closed", label: "Closed" },
 ];
 
-export const projects: Project[] = [
+export const products: Product[] = [
   {
     id: "p1",
     createdAt: "2026-01-12T09:30:00.000Z",
@@ -161,9 +161,9 @@ export const projects: Project[] = [
   },
 ];
 
-export const projectAgentConfigs: Record<string, ProjectAgentConfig> = {
+export const productAgentConfigs: Record<string, ProductAgentConfig> = {
   p1: {
-    projectId: "p1",
+    productId: "p1",
     persona:
       "You are an outbound SDR for SaaS. Keep the tone consultative, ask sharp qualification questions, and tailor outreach by company growth signal and role seniority.",
     dataKnowledge:
@@ -175,7 +175,7 @@ export const projectAgentConfigs: Record<string, ProjectAgentConfig> = {
     aggressiveFollowUp: false,
   },
   p2: {
-    projectId: "p2",
+    productId: "p2",
     persona:
       "You are an enterprise account development agent. Stay concise, executive-friendly, and de-risk conversations with credibility signals and concrete rollout plans.",
     dataKnowledge:
@@ -187,7 +187,7 @@ export const projectAgentConfigs: Record<string, ProjectAgentConfig> = {
     aggressiveFollowUp: false,
   },
   p3: {
-    projectId: "p3",
+    productId: "p3",
     persona:
       "You are an inbound qualification specialist. Respond quickly, map use case fit, and optimize for fast demo booking while staying warm and direct.",
     dataKnowledge:
@@ -203,7 +203,7 @@ export const projectAgentConfigs: Record<string, ProjectAgentConfig> = {
 export const agents: AgentProfile[] = [
   {
     id: "a1",
-    projectId: "p1",
+    productId: "p1",
     name: "Aria",
     initials: "AR",
     role: "Outbound SDR",
@@ -223,7 +223,7 @@ export const agents: AgentProfile[] = [
   },
   {
     id: "a2",
-    projectId: "p2",
+    productId: "p2",
     name: "Echo",
     initials: "EC",
     role: "Enterprise Follow-up Specialist",
@@ -243,7 +243,7 @@ export const agents: AgentProfile[] = [
   },
   {
     id: "a3",
-    projectId: "p3",
+    productId: "p3",
     name: "Nova",
     initials: "NV",
     role: "Inbound Qualifier",
@@ -263,7 +263,8 @@ export const agents: AgentProfile[] = [
   },
 ];
 
-export const getAgentByProjectId = (projectId: string) => agents.find((agent) => agent.projectId === projectId);
+export const getAgentByProductId = (productId: string) =>
+  agents.find((agent) => agent.productId === productId);
 
 const now = new Date();
 const iso = (offsetMin: number) => new Date(now.getTime() + offsetMin * 60_000).toISOString();
@@ -281,7 +282,7 @@ const getLastMessageChannel = (messages: Message[] | undefined) => {
   return messages[messages.length - 1].channel;
 };
 
-const make = (l: Partial<Lead> & Pick<Lead, "id" | "projectId" | "name" | "role" | "company" | "status" | "temperature">): Lead => ({
+const make = (l: Partial<Lead> & Pick<Lead, "id" | "productId" | "name" | "role" | "company" | "status" | "temperature">): Lead => ({
   email: `${l.name!.split(" ")[0].toLowerCase()}@${l.company!.toLowerCase().replace(/\s+/g, "")}.com`,
   lastInteractionAt: iso(-Math.floor(Math.random() * 600) - 30),
   intentScore: 50 + Math.floor(Math.random() * 50),
@@ -299,7 +300,7 @@ const make = (l: Partial<Lead> & Pick<Lead, "id" | "projectId" | "name" | "role"
 
 export const leads: Lead[] = [
   make({
-    id: "l1", projectId: "p1", name: "Sarah Chen", role: "VP of Sales", company: "Meridian Logistics",
+    id: "l1", productId: "p1", name: "Sarah Chen", role: "VP of Sales", company: "Meridian Logistics",
     status: "responded", temperature: "hot", intentScore: 87, budget: "$80k–$120k ARR",
     urgency: "High", interestLevel: "High",
     lastInteractionAt: iso(-23),
@@ -318,7 +319,7 @@ export const leads: Lead[] = [
     meetings: [],
   }),
   make({
-    id: "l2", projectId: "p1", name: "Marcus Webb", role: "Head of Revenue Ops", company: "Kinetics Copilot",
+    id: "l2", productId: "p1", name: "Marcus Webb", role: "Head of Revenue Ops", company: "Kinetics Copilot",
     status: "qualified", temperature: "hot", intentScore: 92, budget: "$45k–$60k ARR",
     urgency: "High", interestLevel: "High",
     lastInteractionAt: iso(-90),
@@ -336,7 +337,7 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l3", projectId: "p1", name: "Elena Vasquez", role: "Director of Marketing", company: "Vesper Retail",
+    id: "l3", productId: "p1", name: "Elena Vasquez", role: "Director of Marketing", company: "Vesper Retail",
     status: "meeting", temperature: "hot", intentScore: 89, budget: "$120k+ ARR",
     urgency: "High", interestLevel: "High",
     lastInteractionAt: iso(-200),
@@ -354,7 +355,7 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l4", projectId: "p1", name: "James O'Connor", role: "CTO", company: "Nereus Bio",
+    id: "l4", productId: "p1", name: "James O'Connor", role: "CTO", company: "Nereus Bio",
     status: "contacted", temperature: "warm", intentScore: 64,
     lastInteractionAt: iso(-1440),
     currentChannel: "sms",
@@ -366,7 +367,7 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l5", projectId: "p1", name: "Priya Anand", role: "Head of Growth", company: "Aethelgard Dynamics",
+    id: "l5", productId: "p1", name: "Priya Anand", role: "Head of Growth", company: "Aethelgard Dynamics",
     status: "new", temperature: "cold", intentScore: 38,
     lastInteractionAt: iso(-60),
     currentChannel: "email",
@@ -375,7 +376,7 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l6", projectId: "p1", name: "David Park", role: "RevOps Lead", company: "Solstice Energy",
+    id: "l6", productId: "p1", name: "David Park", role: "RevOps Lead", company: "Solstice Energy",
     status: "qualified", temperature: "warm", intentScore: 71, budget: "$30k–$50k ARR",
     lastInteractionAt: iso(-320),
     currentChannel: "email",
@@ -387,7 +388,7 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l7", projectId: "p1", name: "Hannah Liu", role: "VP Product", company: "Oculus Freight",
+    id: "l7", productId: "p1", name: "Hannah Liu", role: "VP Product", company: "Oculus Freight",
     status: "responded", temperature: "warm", intentScore: 66,
     lastInteractionAt: iso(-440),
     currentChannel: "phone",
@@ -396,7 +397,7 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l8", projectId: "p1", name: "Tom Reyes", role: "COO", company: "Vanguard Logistics",
+    id: "l8", productId: "p1", name: "Tom Reyes", role: "COO", company: "Vanguard Logistics",
     status: "meeting", temperature: "warm", intentScore: 74,
     lastInteractionAt: iso(-720),
     currentChannel: "phone",
@@ -405,25 +406,25 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l9", projectId: "p1", name: "Ingrid Larsen", role: "Head of Sales", company: "Northwind Trade",
+    id: "l9", productId: "p1", name: "Ingrid Larsen", role: "Head of Sales", company: "Northwind Trade",
     status: "closed", temperature: "warm", intentScore: 95,
     lastInteractionAt: iso(-4320),
     currentChannel: "email",
   }),
   make({
-    id: "l10", projectId: "p1", name: "Rafael Ortiz", role: "Director of Ops", company: "Pinecrest Labs",
+    id: "l10", productId: "p1", name: "Rafael Ortiz", role: "Director of Ops", company: "Pinecrest Labs",
     status: "new", temperature: "cold", intentScore: 42,
     lastInteractionAt: iso(-30),
     currentChannel: "sms",
   }),
   make({
-    id: "l11", projectId: "p1", name: "Yuki Tanaka", role: "Founder", company: "Lumen Studio",
+    id: "l11", productId: "p1", name: "Yuki Tanaka", role: "Founder", company: "Lumen Studio",
     status: "contacted", temperature: "warm", intentScore: 58,
     lastInteractionAt: iso(-2200),
     currentChannel: "phone",
   }),
   make({
-    id: "l12", projectId: "p2", name: "Margaret Holbrook", role: "SVP Procurement", company: "Brightline Industries",
+    id: "l12", productId: "p2", name: "Margaret Holbrook", role: "SVP Procurement", company: "Brightline Industries",
     status: "qualified", temperature: "hot", intentScore: 84, budget: "$250k+ ARR",
     lastInteractionAt: iso(-150),
     currentChannel: "phone",
@@ -432,7 +433,7 @@ export const leads: Lead[] = [
     ],
   }),
   make({
-    id: "l13", projectId: "p3", name: "Chris Bell", role: "Sales Manager", company: "Tidewater Co.",
+    id: "l13", productId: "p3", name: "Chris Bell", role: "Sales Manager", company: "Tidewater Co.",
     status: "responded", temperature: "hot", intentScore: 78,
     lastInteractionAt: iso(-50),
     currentChannel: "sms",
@@ -442,7 +443,7 @@ export const leads: Lead[] = [
 export const conversationsNeedingAttention: ConversationAttentionItem[] = [
   {
     id: "attn_1",
-    projectId: "p1",
+    productId: "p1",
     leadId: "l4",
     customerName: "James O'Connor",
     company: "Nereus Bio",
@@ -452,7 +453,7 @@ export const conversationsNeedingAttention: ConversationAttentionItem[] = [
   },
   {
     id: "attn_2",
-    projectId: "p1",
+    productId: "p1",
     leadId: "l7",
     customerName: "Hannah Liu",
     company: "Oculus Freight",
@@ -462,7 +463,7 @@ export const conversationsNeedingAttention: ConversationAttentionItem[] = [
   },
   {
     id: "attn_3",
-    projectId: "p2",
+    productId: "p2",
     leadId: "l12",
     customerName: "Margaret Holbrook",
     company: "Brightline Industries",
@@ -472,7 +473,7 @@ export const conversationsNeedingAttention: ConversationAttentionItem[] = [
   },
   {
     id: "attn_4",
-    projectId: "p1",
+    productId: "p1",
     leadId: "l1",
     customerName: "Sarah Chen",
     company: "Meridian Logistics",
@@ -482,7 +483,7 @@ export const conversationsNeedingAttention: ConversationAttentionItem[] = [
   },
   {
     id: "attn_5",
-    projectId: "p3",
+    productId: "p3",
     leadId: "l13",
     customerName: "Chris Bell",
     company: "Tidewater Co.",
@@ -498,8 +499,7 @@ export const todaysMeetings: Meeting[] = leads
   .sort((a, b) => a.start.localeCompare(b.start));
 
 export const getLeadById = (id: string) => leads.find((l) => l.id === id);
-export const getProjectById = (id: string) => projects.find((p) => p.id === id);
-
+export const getProductById = (id: string) => products.find((p) => p.id === id);
 // Aggregate metrics
 export const metrics = {
   activeLeads: leads.filter((l) => l.status !== "closed").length,
