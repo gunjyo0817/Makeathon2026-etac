@@ -31,7 +31,7 @@ export default function CustomerDetail() {
         <LeadHeader lead={lead} />
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
           <div className="flex flex-col gap-6 min-w-0">
-            <ConversationHistory messages={lead.messages} customerName={lead.name} />
+            <ConversationHistory lead={lead} />
             <AgentPlanPanel actions={lead.actions} />
           </div>
           <div className="flex flex-col gap-6">
