@@ -73,14 +73,14 @@ export default function Leads() {
   }, [productId, queryProductId, validQueryProductId]);
 
   useEffect(() => {
-    const current = validQueryProductId ?? "all";
+    const current = queryProductId ?? "all";
     if (current === productId) return;
 
     const next = new URLSearchParams(searchParams);
     if (productId === "all") next.delete("productId");
     else next.set("productId", productId);
     setSearchParams(next, { replace: true });
-  }, [productId, searchParams, setSearchParams, validQueryProductId]);
+  }, [productId, queryProductId, searchParams, setSearchParams]);
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {
