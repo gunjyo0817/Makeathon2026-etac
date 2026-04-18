@@ -1,10 +1,25 @@
+import { useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { projects, leads, STATUS_COLUMNS } from "@/data/mock";
 import { FolderKanban, ArrowRight, Plus, Users, TrendingUp } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Projects() {
   const navigate = useNavigate();
+  const [draft, setDraft] = useState({
+    name: "",
+    description: "",
+    objective: "",
+  });
 
   return (
     <AppShell>
@@ -16,9 +31,76 @@ export default function Projects() {
               Each project is an independent campaign with its own leads, agents, and pipeline.
             </p>
           </div>
-          <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-2xl px-4 py-2.5 text-sm font-semibold shadow-clay hover:opacity-90 transition-opacity">
-            <Plus className="size-4" /> New Project
-          </button>
+          <Dialog
+            onOpenChange={(open) => {
+              if (open) {
+                setDraft({
+                  name: "",
+                  description: "",
+                  objective: "",
+                });
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-2xl px-4 py-2.5 text-sm font-semibold shadow-clay hover:opacity-90 transition-opacity">
+                <Plus className="size-4" /> New Project
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl rounded-3xl border-border bg-card/95 backdrop-blur-sm">
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+              </DialogHeader>
+
+              <Field label="Project name">
+                <Input
+                  placeholder="AI SDR for Healthcare"
+                  value={draft.name}
+                  onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
+                />
+              </Field>
+
+              <Field label="Short description">
+                <textarea
+                  rows={3}
+                  placeholder="Outbound to growth-stage healthcare operators"
+                  value={draft.description}
+                  onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
+                  className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                />
+              </Field>
+
+              <Field label="Project objective">
+                <textarea
+                  rows={4}
+                  placeholder="Generate qualified meetings with healthcare operators and route strong opportunities into the sales team."
+                  value={draft.objective}
+                  onChange={(e) => setDraft((prev) => ({ ...prev, objective: e.target.value }))}
+                  className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                />
+              </Field>
+
+              <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Preview</div>
+                <div className="mt-2 text-base font-bold">{draft.name || "Untitled project"}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{draft.description || "Short description will appear here."}</div>
+              </div>
+
+              <DialogFooter>
+                <DialogClose asChild>
+                  <button className="px-4 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors">
+                    Cancel
+                  </button>
+                </DialogClose>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold opacity-60 cursor-not-allowed"
+                >
+                  Create Project
+                </button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -76,5 +158,23 @@ function Stat({ icon: Icon, label, value }: { icon?: any; label: string; value: 
       </div>
       <div className="text-lg font-bold tabular-nums mt-1">{value}</div>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className="h-10 px-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+    />
   );
 }
