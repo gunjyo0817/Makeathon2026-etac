@@ -21,6 +21,7 @@ export type LeadRow = {
   created_at?: string;
   updated_at?: string;
   product_id?: string | number | null;
+  productId?: string | number | null;
   full_name: string;
   email?: string;
   phone?: string;
