@@ -126,6 +126,12 @@ Set secrets in Render: `HAPPYROBOT_API_KEY`, and optionally `HAPPYROBOT_BASE_URL
 
 Configured via `CORS_ORIGINS` in `backend/.env` (see `backend/app/config.py` / `main.py`). `*` allows any browser origin without credentials; a comma-separated list merges with dev localhost origins and enables credentials.
 
+### Lead scheduling (HappyRobot → Gmail)
+
+Flow: HappyRobot **POST**s lead JSON to our webhook → sales **POST**s available slots → we **POST** JSON to `HAPPYROBOT_OUTBOUND_WEBHOOK_URL` (your HR workflow / mail step) with `booking_url` → lead opens **`/book/:token`** (public page, not linked from the Etac sidebar) and confirms a slot → we POST `booking_confirmed` to the same outbound URL.
+
+Env (see `backend/.env.example`): `PUBLIC_APP_BASE_URL` (e.g. `https://your-app.vercel.app`, no trailing slash), optional `BOOKING_WEBHOOK_SECRET` / `BOOKING_SERVICE_SECRET`, and `HAPPYROBOT_OUTBOUND_WEBHOOK_URL`. Sessions are **in-memory** (restart clears them); swap for Twin or Redis when you need persistence.
+
 ## Backend API
 
 - `GET /` — service name, links to `/health` and `/docs`
@@ -142,6 +148,10 @@ Configured via `CORS_ORIGINS` in `backend/.env` (see `backend/app/config.py` / `
 - `POST /api/leads`
 - `GET /api/transcripts?customer_id=` — transcript rows for a lead (`customer_id` matches lead id)
 - `GET /api/conversations/latest-assignment?lead_id=` — latest `etac_conversation` row for a lead (by `follow_up_date`), including assigned product id
+- `POST /api/webhooks/happyrobot/lead` — ingest lead from HappyRobot; returns `booking_url` / `booking_token`
+- `POST /api/booking/publish-slots` — sales publishes ISO slot list for a `lead_id`; triggers outbound notify
+- `GET /api/booking/sessions/{token}` — includes `twin_slots`: all rows from `etac_meeting_slots` (shared sales pool for every lead; single rep assumption) plus in-memory `available_slots`
+- `POST /api/booking/sessions/{token}/confirm` — in-memory: `{ "slot_start": "<iso>" }`. Twin: `{ "slot_id": <id>, "slot_start": "<iso>" }` (writes `etac_meetings`, deletes slot, then outbound)
 
 ## Quick Test
 

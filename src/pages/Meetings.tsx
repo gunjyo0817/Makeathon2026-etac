@@ -1,7 +1,16 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { leads, products, type Meeting } from "@/data/mock";
+import {
+  availabilityFromTwinSlotRows,
+  buildTwinSlotInsertsFromAvailability,
+  mapTwinMeetingsToRecords,
+  twinSlotRowsToDeleteForProduct,
+} from "@/lib/meetingCalendarSync";
+import { deleteTwinTableRows, getLeads, getTwinTableRows, insertTwinTableRow } from "@/lib/api";
 import { MeetingTypeBadge } from "@/components/sales/Badges";
 import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { ProductSelector } from "@/components/sales/ProductSelector";
@@ -35,6 +44,7 @@ const timeSlots = Array.from({ length: 21 }, (_, i) => slotFromIndex(i)); // 08:
 
 export default function Meetings() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [productId, setProductId] = useState(products[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
@@ -60,7 +70,49 @@ export default function Meetings() {
       }))
     )
   );
+  const [savingSpots, setSavingSpots] = useState(false);
+
+  const { data: slotRows = [] } = useQuery({
+    queryKey: ["twin", "etac_meeting_slots"],
+    queryFn: () => getTwinTableRows("etac_meeting_slots"),
+  });
+  const { data: meetingRows = [] } = useQuery({
+    queryKey: ["twin", "etac_meetings"],
+    queryFn: () => getTwinTableRows("etac_meetings"),
+  });
+  const { data: leadRows = [] } = useQuery({
+    queryKey: ["leads"],
+    queryFn: getLeads,
+  });
+
   const selectedProduct = products.find((product) => product.id === productId);
+
+  useEffect(() => {
+    setAvailabilityByProduct((prev) => {
+      const next = { ...prev };
+      for (const p of products) {
+        next[p.id] = availabilityFromTwinSlotRows(slotRows as Record<string, unknown>[], p.id);
+      }
+      return next;
+    });
+  }, [slotRows]);
+
+  useEffect(() => {
+    const twin = mapTwinMeetingsToRecords(
+      meetingRows as Record<string, unknown>[],
+      leadRows,
+      products[0]?.id ?? "p1"
+    ) as MeetingWithLeadRecord[];
+    const mock = leads.flatMap((lead) =>
+      lead.meetings.map((meeting) => ({
+        ...meeting,
+        leadName: lead.name,
+        productId: lead.productId,
+        status: "scheduled" as MeetingStatus,
+      }))
+    );
+    setMeetingRecords([...twin, ...mock]);
+  }, [meetingRows, leadRows]);
 
   useEffect(() => {
     const productIdFromQuery = searchParams.get("productId");
@@ -200,13 +252,38 @@ export default function Meetings() {
     setDragState(null);
   };
 
-  const saveSpotsDialog = () => {
-    setAvailabilityByProduct((prev) => ({
-      ...prev,
-      [productId]: spotsDraft,
-    }));
-    setIsSpotsDialogOpen(false);
-    setDragState(null);
+  const saveSpotsDialog = async () => {
+    setSavingSpots(true);
+    try {
+      const rows = (await getTwinTableRows("etac_meeting_slots")) as Record<string, unknown>[];
+      const toDelete = twinSlotRowsToDeleteForProduct(rows, productId);
+      for (const r of toDelete) {
+        const id = r.id ?? r.Id;
+        if (id == null) continue;
+        await deleteTwinTableRows("etac_meeting_slots", [{ id }]);
+      }
+      const inserts = buildTwinSlotInsertsFromAvailability(productId, spotsDraft);
+      for (const values of inserts) {
+        try {
+          await insertTwinTableRow("etac_meeting_slots", values as Record<string, unknown>);
+        } catch {
+          const { product_id: _p, ...rest } = values;
+          await insertTwinTableRow("etac_meeting_slots", rest as Record<string, unknown>);
+        }
+      }
+      setAvailabilityByProduct((prev) => ({
+        ...prev,
+        [productId]: spotsDraft,
+      }));
+      await queryClient.invalidateQueries({ queryKey: ["twin"] });
+      setIsSpotsDialogOpen(false);
+      setDragState(null);
+      toast.success("Saved availability to Twin");
+    } catch (e) {
+      toast.error((e as Error).message || "Save failed");
+    } finally {
+      setSavingSpots(false);
+    }
   };
 
   const selectedMeetingRecord = useMemo(
@@ -327,10 +404,12 @@ export default function Meetings() {
                     X
                   </button>
                   <button
-                    onClick={saveSpotsDialog}
-                    className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                    type="button"
+                    disabled={savingSpots}
+                    onClick={() => void saveSpotsDialog()}
+                    className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                   >
-                    Save
+                    {savingSpots ? "Saving…" : "Save"}
                   </button>
                 </div>
               </DialogContent>

@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     )
     # Comma-separated browser origins, or "*" for any (credentials off — fine for this API).
     cors_origins: str = Field(default="*")
+    # Lead booking (Gmail / HappyRobot): public SPA origin for links in outbound payloads.
+    public_app_base_url: str = Field(default="")
+    # Optional: require `X-Booking-Webhook-Secret` on POST /api/webhooks/happyrobot/lead
+    booking_webhook_secret: str = Field(default="")
+    # Optional in dev: require `X-Booking-Service-Secret` on POST /api/booking/publish-slots
+    booking_service_secret: str = Field(default="")
+    # HappyRobot (or middleware) URL to receive availability / confirmation JSON.
+    happyrobot_outbound_webhook_url: str = Field(default="")
 
 
 settings = Settings()
