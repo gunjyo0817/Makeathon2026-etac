@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { leads, projects, type Meeting } from "@/data/mock";
 import { MeetingTypeBadge } from "@/components/sales/Badges";
@@ -35,6 +35,7 @@ const timeSlots = Array.from({ length: 21 }, (_, i) => slotFromIndex(i)); // 08:
 
 export default function Meetings() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [projectId, setProjectId] = useState(projects[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [anchorDate, setAnchorDate] = useState(stripTime(new Date()));
@@ -59,6 +60,15 @@ export default function Meetings() {
       }))
     )
   );
+  const selectedProject = projects.find((project) => project.id === projectId);
+
+  useEffect(() => {
+    const projectIdFromQuery = searchParams.get("projectId");
+    if (projectIdFromQuery && projects.some((project) => project.id === projectIdFromQuery)) {
+      setProjectId(projectIdFromQuery);
+      setAnchorDate(stripTime(new Date()));
+    }
+  }, [searchParams]);
 
   const allMeetings = useMemo(
     (): MeetingWithLead[] =>
@@ -227,6 +237,11 @@ export default function Meetings() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Meetings</h1>
             <p className="text-muted-foreground mt-2 text-sm">Calendar-first scheduling. Agents use your available spots to open booking windows to leads.</p>
+            {selectedProject ? (
+              <div className="mt-3 inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
+                Viewing {selectedProject.name}
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
