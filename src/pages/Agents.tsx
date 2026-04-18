@@ -21,10 +21,11 @@ export default function Agents() {
     Object.fromEntries(agents.map((agent) => [agent.id, agent.status]))
   );
   const [agentOverrides, setAgentOverrides] = useState<Record<string, (typeof agents)[number]>>({});
+  const [configOverrides, setConfigOverrides] = useState(projectAgentConfigs);
 
   const baseAgent = getAgentByProjectId(projectId);
   const agent = baseAgent ? agentOverrides[baseAgent.id] ?? baseAgent : undefined;
-  const config = projectAgentConfigs[projectId];
+  const config = configOverrides[projectId];
 
   const toggleStatus = (agentId: string) => {
     setStatuses((prev) => ({
@@ -46,7 +47,23 @@ export default function Agents() {
 
         <div className="bg-card border border-border rounded-3xl p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Persona</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Persona</div>
+              <ConfigureProjectContextDialog
+                persona={config?.persona ?? ""}
+                dataKnowledge={config?.dataKnowledge ?? ""}
+                onSave={(next) =>
+                  setConfigOverrides((prev) => ({
+                    ...prev,
+                    [projectId]: {
+                      ...(prev[projectId] ?? projectAgentConfigs[projectId]),
+                      persona: next.persona,
+                      dataKnowledge: next.dataKnowledge,
+                    },
+                  }))
+                }
+              />
+            </div>
             <div className="text-sm mt-1.5 leading-relaxed">{config?.persona}</div>
           </div>
           <div>
@@ -250,6 +267,71 @@ function ConfigureAgentDialog({
               className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Save configuration
+            </button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ConfigureProjectContextDialog({
+  persona,
+  dataKnowledge,
+  onSave,
+}: {
+  persona: string;
+  dataKnowledge: string;
+  onSave: (payload: { persona: string; dataKnowledge: string }) => void;
+}) {
+  const [draft, setDraft] = useState({ persona, dataKnowledge });
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        if (open) setDraft({ persona, dataKnowledge });
+      }}
+    >
+      <DialogTrigger asChild>
+        <button className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border border-border hover:bg-muted transition-colors">
+          <Settings2 className="size-3.5" />
+          Edit
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Edit Project Agent Context</DialogTitle>
+          <DialogDescription>Project-level instructions used by the single assigned agent.</DialogDescription>
+        </DialogHeader>
+
+        <Field label="Project persona">
+          <textarea
+            rows={5}
+            value={draft.persona}
+            onChange={(e) => setDraft((prev) => ({ ...prev, persona: e.target.value }))}
+            className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+          />
+        </Field>
+
+        <Field label="Knowledge context">
+          <textarea
+            rows={5}
+            value={draft.dataKnowledge}
+            onChange={(e) => setDraft((prev) => ({ ...prev, dataKnowledge: e.target.value }))}
+            className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+          />
+        </Field>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <button className="px-4 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors">Cancel</button>
+          </DialogClose>
+          <DialogClose asChild>
+            <button
+              onClick={() => onSave(draft)}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Save context
             </button>
           </DialogClose>
         </DialogFooter>
