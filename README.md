@@ -84,6 +84,8 @@ No trailing slash. Restart `npm run dev` after changing env files.
 
 For production hosting (Vercel, Netlify, etc.), set the same variable in the host’s environment settings and rebuild.
 
+**Vercel:** `vercel.json` rewrites client-side routes (e.g. `/leads/1`) to `index.html` so refresh/deep links do not 404.
+
 ## Backend Setup
 
 ```bash
