@@ -13,7 +13,7 @@ export function ControlPanel({ initialPaused }: { initialPaused: boolean }) {
         </div>
         <div>
           <div className="text-sm font-bold leading-none">Control Panel</div>
-          <div className="text-[11px] text-muted-foreground mt-1">Override or supervise Etac's buyer-facing actions</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Override or supervise Etac's lead-facing actions</div>
         </div>
       </div>
 
@@ -26,7 +26,7 @@ export function ControlPanel({ initialPaused }: { initialPaused: boolean }) {
         >
           <div className={cn("size-2.5 rounded-full animate-pulse-soft", paused ? "bg-warning" : "bg-success")} />
           <div className="text-xs font-semibold flex-1">
-            {paused ? "Assistant paused — no automated actions will run." : "Assistant active — managing this buyer conversation autonomously."}
+            {paused ? "Assistant paused — no automated actions will run." : "Assistant active — managing this lead conversation autonomously."}
           </div>
         </div>
 

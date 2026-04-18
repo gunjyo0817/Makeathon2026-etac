@@ -49,7 +49,7 @@ export default function Agents() {
         <header className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
-            <p className="text-muted-foreground mt-2 text-sm">Each product can have a dedicated assistant for buyer outreach, quoting, and follow-up.</p>
+            <p className="text-muted-foreground mt-2 text-sm">Each product can have a dedicated assistant for lead outreach, quoting, and follow-up.</p>
           </div>
           <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
         </header>
@@ -190,7 +190,7 @@ function ConfigureAgentDialog({
       <DialogContent className="max-w-2xl rounded-2xl">
         <DialogHeader>
           <DialogTitle>Configure {agent.name}</DialogTitle>
-          <DialogDescription>Product-bound assistant settings for outreach, quoting, and buyer follow-up.</DialogDescription>
+          <DialogDescription>Product-bound assistant settings for outreach, quoting, and lead follow-up.</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

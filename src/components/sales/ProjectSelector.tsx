@@ -82,7 +82,7 @@ export function ProjectSelector({
                     {p.id === selectedId && <Check className="size-4 text-primary" />}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5 text-pretty">{p.description}</div>
-                  <div className="text-[11px] text-muted-foreground mt-1.5 font-medium">{p.leadCount} buyers</div>
+                  <div className="text-[11px] text-muted-foreground mt-1.5 font-medium">{p.leadCount} leads</div>
                 </div>
               </button>
             ))}

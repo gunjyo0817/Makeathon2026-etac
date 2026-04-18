@@ -159,7 +159,7 @@ export default function Projects() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
-                  <Stat icon={Users} label="Buyers" value={projectLeads.length} />
+                  <Stat icon={Users} label="Leads" value={projectLeads.length} />
                   <Stat icon={TrendingUp} label="Qualified" value={qualified} />
                   <Stat label="Interest" value={`${conv}%`} />
                 </div>

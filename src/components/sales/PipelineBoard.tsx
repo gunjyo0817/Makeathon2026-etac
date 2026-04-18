@@ -10,8 +10,8 @@ export function PipelineBoard({ leads }: { leads: Lead[] }) {
     <div className="bg-card border border-border rounded-3xl shadow-card flex flex-col overflow-hidden">
       <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <div>
-          <div className="text-sm font-bold leading-none">Buyer Pipeline</div>
-          <div className="text-[11px] text-muted-foreground mt-1">{leads.length} active buyers · drag to update stage</div>
+          <div className="text-sm font-bold leading-none">Lead Pipeline</div>
+          <div className="text-[11px] text-muted-foreground mt-1">{leads.length} active leads · drag to update stage</div>
         </div>
       </div>
       <div className="flex gap-4 p-4 overflow-x-auto scrollbar-thin">
@@ -49,7 +49,7 @@ export function PipelineBoard({ leads }: { leads: Lead[] }) {
                   </button>
                 ))}
                 {items.length === 0 && (
-                  <div className="text-[11px] text-muted-foreground text-center py-4">No buyers</div>
+                  <div className="text-[11px] text-muted-foreground text-center py-4">No leads</div>
                 )}
               </div>
             </div>

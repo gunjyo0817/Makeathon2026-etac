@@ -17,8 +17,8 @@ export default function CustomerDetail() {
       <AppShell>
         <div className="p-10 max-w-2xl mx-auto">
           <div className="bg-card border border-border rounded-3xl p-10 text-center shadow-card">
-            <h2 className="text-lg font-bold">Buyer not found</h2>
-            <p className="text-sm text-muted-foreground mt-2">The buyer record you're looking for doesn't exist.</p>
+            <h2 className="text-lg font-bold">Lead not found</h2>
+            <p className="text-sm text-muted-foreground mt-2">The lead you're looking for doesn't exist.</p>
           </div>
         </div>
       </AppShell>

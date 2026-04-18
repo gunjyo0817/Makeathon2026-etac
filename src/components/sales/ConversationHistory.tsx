@@ -59,7 +59,7 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
             </div>
           </div>
           <div className="text-[11px] text-muted-foreground">
-            {PRIMARY_CHANNELS.length} channels available for this buyer
+            {PRIMARY_CHANNELS.length} channels available for this lead
           </div>
         </div>
 
@@ -190,7 +190,7 @@ function EmptyState({ message }: { message: string }) {
     <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-5 py-8 text-center">
       <div className="text-sm font-semibold">{message}</div>
       <div className="text-xs text-muted-foreground mt-1">
-        Etac can switch into this channel when the buyer responds there.
+        Etac can switch into this channel when the lead responds there.
       </div>
     </div>
   );

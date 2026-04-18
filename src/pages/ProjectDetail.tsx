@@ -55,7 +55,7 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-soft">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Buyers linked</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Leads linked</div>
             <div className="mt-1 text-2xl font-bold">{projectLeads.length}</div>
           </div>
         </header>

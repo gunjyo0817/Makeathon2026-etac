@@ -22,7 +22,7 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-balance">Good morning, Elias.</h1>
             <p className="text-muted-foreground mt-2 text-sm text-pretty">
-              Etac is actively tracking <span className="text-foreground font-semibold">{filteredLeads.length} buyer conversations</span> for you.
+              Etac is actively tracking <span className="text-foreground font-semibold">{filteredLeads.length} lead conversations</span> for you.
               <span className="text-primary font-medium"> Meridian Design Studio</span> showroom call is booked for 10:30 AM today.
             </p>
           </div>

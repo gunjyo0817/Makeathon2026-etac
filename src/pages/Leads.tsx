@@ -96,9 +96,9 @@ export default function Leads() {
       <div className="px-8 pb-10 pt-2 flex flex-col gap-6 max-w-[1600px] mx-auto">
         <header>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Buyers</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              {filtered.length} of {leads.length} buyer records across all products.
+              {filtered.length} of {leads.length} lead records across all products.
             </p>
           </div>
         </header>
@@ -106,7 +106,7 @@ export default function Leads() {
         <div className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
             <div className="text-xs text-muted-foreground">
-              Filter by buyer, company, product, and activity.
+              Filter by lead, company, product, and activity.
             </div>
             <button
               type="button"
@@ -130,7 +130,7 @@ export default function Leads() {
                     <TextFilterHeader
                       label="Lead"
                       value={leadQuery}
-                      placeholder="Search buyer or role"
+                      placeholder="Search lead or role"
                       onChange={setLeadQuery}
                     />
                   </th>
@@ -240,7 +240,7 @@ export default function Leads() {
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={7} className="text-center py-12 text-sm text-muted-foreground">
-                      No buyer records match your filters.
+                      No lead records match your filters.
                     </td>
                   </tr>
                 )}

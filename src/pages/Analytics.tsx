@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 const kpis = [
   { label: "Quoted Value", value: "$1.84M", delta: "+12.4%", up: true, icon: Target },
-  { label: "Buyer Replies (7d)", value: "248", delta: "+18.2%", up: true, icon: MessageSquare },
+  { label: "Lead Replies (7d)", value: "248", delta: "+18.2%", up: true, icon: MessageSquare },
   { label: "Booked Visits", value: metrics.scheduledMeetings, delta: "+3", up: true, icon: CalendarCheck },
   { label: "Avg. Response Time", value: "2.4h", delta: "-22%", up: true, icon: Users },
 ];
@@ -56,8 +56,8 @@ export default function Analytics() {
           <div className="bg-card border border-border rounded-3xl shadow-card p-6">
             <div className="flex items-baseline justify-between mb-6">
               <div>
-                <div className="text-sm font-bold">Buyer Outreach Activity</div>
-                <div className="text-[11px] text-muted-foreground mt-1">Messages sent vs. buyer replies received</div>
+                <div className="text-sm font-bold">Lead Outreach Activity</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Messages sent vs. lead replies received</div>
               </div>
               <div className="flex items-center gap-4 text-[11px] font-semibold">
                 <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary/40" /> Sent</span>
@@ -80,8 +80,8 @@ export default function Analytics() {
 
           <div className="bg-card border border-border rounded-3xl shadow-card p-6 flex flex-col">
             <div className="mb-5">
-              <div className="text-sm font-bold">Buyer Stage Distribution</div>
-              <div className="text-[11px] text-muted-foreground mt-1">Where your {total} buyer records are right now</div>
+              <div className="text-sm font-bold">Lead Stage Distribution</div>
+              <div className="text-[11px] text-muted-foreground mt-1">Where your {total} lead records are right now</div>
             </div>
             <div className="flex flex-col gap-4 flex-1">
               {STATUS_COLUMNS.map((s, i) => {

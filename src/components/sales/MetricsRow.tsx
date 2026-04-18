@@ -30,12 +30,12 @@ export function MetricsRow({ projectId }: { projectId: string }) {
 
   const items = [
     {
-      label: "Active Buyers",
+      label: "Active Leads",
       value: activeLeads.length,
       delta: `${Math.min(activeLeads.length, 6)} touched today`,
       deltaTone: "success" as const,
       icon: Users,
-      detailTitle: "Active Buyers",
+      detailTitle: "Active Leads",
       content: (
         <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {activeLeads.slice(0, 8).map((lead) => (
@@ -52,12 +52,12 @@ export function MetricsRow({ projectId }: { projectId: string }) {
       ),
     },
     {
-      label: "Qualified Buyers",
+      label: "Qualified Leads",
       value: qualifiedLeads.length,
       delta: `${qualifiedLeads.length} in consideration`,
       deltaTone: "success" as const,
       icon: CheckCircle2,
-      detailTitle: "Qualified Buyers",
+      detailTitle: "Qualified Leads",
       content: (
         <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {qualifiedLeads.slice(0, 8).map((lead) => (
