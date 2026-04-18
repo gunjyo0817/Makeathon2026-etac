@@ -29,6 +29,7 @@ type UiLead = {
 
 type IntentFilter = "all" | "high" | "medium" | "low";
 type ActivityFilter = "all" | "today" | "3d" | "7d" | "30d";
+const UNASSIGNED_PRODUCT_ID = "unassigned";
 
 const TEMPS: { id: Temperature | "all"; label: string }[] = [
   { id: "all", label: "All temps" },
@@ -60,8 +61,11 @@ export default function Leads() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const queryProductId = searchParams.get("productId");
-  const validQueryProductId =
-    queryProductId && products.some((product) => String(product.id) === queryProductId) ? queryProductId : null;
+  const validQueryProductId = useMemo(() => {
+    if (!queryProductId) return null;
+    if (queryProductId === "all" || queryProductId === UNASSIGNED_PRODUCT_ID) return queryProductId;
+    return products.some((product) => String(product.id) === queryProductId) ? queryProductId : null;
+  }, [products, queryProductId]);
   const [leadQuery, setLeadQuery] = useState("");
   const [companyQuery, setCompanyQuery] = useState("");
   const [productId, setProductId] = useState<string>(validQueryProductId ?? "all");
@@ -105,7 +109,7 @@ export default function Leads() {
             const createdAt = lead.updated_at ?? lead.created_at ?? new Date().toISOString();
             return {
               id: String(lead.id),
-              productId: String((lead as LeadRow & { product_id?: string | number }).product_id ?? "unknown"),
+              productId: String((lead as LeadRow & { product_id?: string | number }).product_id ?? UNASSIGNED_PRODUCT_ID),
               name: lead.full_name ?? "Unknown Lead",
               role: "Prospect",
               company: lead.company ?? "-",
@@ -132,7 +136,7 @@ export default function Leads() {
       return;
     }
 
-    if (!validQueryProductId && queryProductId === null && productId !== "all") {
+    if (!validQueryProductId && productId !== "all") {
       setProductId("all");
     }
   }, [productId, queryProductId, validQueryProductId]);
@@ -169,7 +173,7 @@ export default function Leads() {
 
       return true;
     });
-  }, [activityFilter, companyQuery, intentFilter, leadQuery, productId, status, temp]);
+  }, [activityFilter, companyQuery, intentFilter, leadQuery, productId, status, temp, leads, products]);
 
   const clearFilters = () => {
     setLeadQuery("");
@@ -238,9 +242,16 @@ export default function Leads() {
                     <SelectFilterHeader
                       label="Product"
                       value={productId}
-                      summary={productId === "all" ? "All" : products.find((p) => String(p.id) === productId)?.name ?? "All"}
+                      summary={
+                        productId === "all"
+                          ? "All products"
+                          : productId === UNASSIGNED_PRODUCT_ID
+                            ? "Unassigned"
+                            : products.find((p) => String(p.id) === productId)?.name ?? "All products"
+                      }
                       options={[
                         { id: "all", label: "All products" },
+                        { id: UNASSIGNED_PRODUCT_ID, label: "Unassigned" },
                         ...products.map((product) => ({ id: String(product.id), label: product.name })),
                       ]}
                       onValueChange={setProductId}
@@ -319,7 +330,9 @@ export default function Leads() {
                           {l.company}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-muted-foreground">{product?.name}</td>
+                      <td className="px-5 py-3.5 text-xs text-muted-foreground">
+                        {l.productId === UNASSIGNED_PRODUCT_ID ? "Unassigned" : product?.name ?? "Unknown"}
+                      </td>
                       <td className="px-5 py-3.5"><StatusBadge status={l.status} /></td>
                       <td className="px-5 py-3.5"><TemperatureBadge temp={l.temperature} /></td>
                       <td className="px-5 py-3.5 text-right tabular-nums font-semibold">
