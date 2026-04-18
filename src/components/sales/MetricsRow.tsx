@@ -1,37 +1,8 @@
-import { metrics } from "@/data/mock";
-import { TrendingUp, Users, CheckCircle2, Calendar } from "lucide-react";
+import { getAgentByProjectId, leads } from "@/data/mock";
+import { TrendingUp, Users, CheckCircle2, Calendar, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const items = [
-  {
-    label: "Active Leads",
-    value: metrics.activeLeads,
-    delta: "+8 this week",
-    deltaTone: "success" as const,
-    icon: Users,
-  },
-  {
-    label: "Qualified Leads",
-    value: metrics.qualifiedLeads,
-    delta: "+3 vs last week",
-    deltaTone: "success" as const,
-    icon: CheckCircle2,
-  },
-  {
-    label: "Scheduled Meetings",
-    value: metrics.scheduledMeetings,
-    delta: "Next: today 9:30am",
-    deltaTone: "neutral" as const,
-    icon: Calendar,
-  },
-  {
-    label: "Response Rate",
-    value: `${metrics.responseRate}%`,
-    delta: "+4.2% vs last month",
-    deltaTone: "success" as const,
-    icon: TrendingUp,
-  },
-];
+import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const toneClass = {
   success: "bg-success-soft text-success",
@@ -39,15 +10,137 @@ const toneClass = {
   warning: "bg-warning-soft text-warning",
 };
 
-export function MetricsRow() {
+export function MetricsRow({ projectId }: { projectId: string }) {
+  const navigate = useNavigate();
+  const projectLeads = leads.filter((lead) => lead.projectId === projectId);
+  const activeLeads = projectLeads.filter((lead) => lead.status !== "closed");
+  const qualifiedLeads = projectLeads.filter((lead) => lead.status === "qualified" || lead.status === "meeting");
+  const meetings = projectLeads
+    .flatMap((lead) => lead.meetings.map((meeting) => ({ ...meeting, leadName: lead.name })))
+    .sort((a, b) => a.start.localeCompare(b.start));
+  const responseRate = projectLeads.length
+    ? Math.round((projectLeads.filter((lead) => lead.status === "responded" || lead.status === "qualified" || lead.status === "meeting").length / projectLeads.length) * 100)
+    : 0;
+  const agent = getAgentByProjectId(projectId);
+  const channelBaseRate: Record<string, number> = { Email: 61, SMS: 54, Phone: 72, Chat: 67, WhatsApp: 64 };
+  const channelRates = (agent?.channels ?? ["Email", "Phone"]).map((channel) => ({
+    channel,
+    rate: channelBaseRate[channel] ?? 58,
+  }));
+
+  const items = [
+    {
+      label: "Active Leads",
+      value: activeLeads.length,
+      delta: `${Math.min(activeLeads.length, 6)} touched today`,
+      deltaTone: "success" as const,
+      icon: Users,
+      detailTitle: "Active Leads",
+      content: (
+        <ul className="mt-2 space-y-2">
+          {activeLeads.slice(0, 8).map((lead) => (
+            <li key={lead.id}>
+              <button
+                onClick={() => navigate(`/leads/${lead.id}`)}
+                className="w-full text-left text-xs text-muted-foreground rounded-lg px-2 py-1.5 hover:bg-muted transition-colors"
+              >
+                {lead.name} - {lead.company}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ),
+    },
+    {
+      label: "Qualified Leads",
+      value: qualifiedLeads.length,
+      delta: `${qualifiedLeads.length} in pipeline`,
+      deltaTone: "success" as const,
+      icon: CheckCircle2,
+      detailTitle: "Qualified Leads",
+      content: (
+        <ul className="mt-2 space-y-2">
+          {qualifiedLeads.slice(0, 8).map((lead) => (
+            <li key={lead.id}>
+              <button
+                onClick={() => navigate(`/leads/${lead.id}`)}
+                className="w-full text-left text-xs text-muted-foreground rounded-lg px-2 py-1.5 hover:bg-muted transition-colors"
+              >
+                {lead.name} - intent {lead.intentScore}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ),
+    },
+    {
+      label: "Scheduled Meetings",
+      value: meetings.length,
+      delta: meetings[0] ? `Next: ${formatMeetingTime(meetings[0].start)}` : "No upcoming meetings",
+      deltaTone: "neutral" as const,
+      icon: Calendar,
+      detailTitle: "Scheduled Meetings",
+      content: (
+        <ul className="mt-2 space-y-2">
+          {meetings.slice(0, 8).map((meeting) => (
+            <li key={meeting.id}>
+              <button
+                onClick={() => navigate(`/leads/${meeting.leadId}`)}
+                className="w-full text-left text-xs text-muted-foreground rounded-lg px-2 py-1.5 hover:bg-muted transition-colors"
+              >
+                {meeting.customerName} - {formatMeetingTime(meeting.start)}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ),
+    },
+    {
+      label: "Response Rate",
+      value: `${responseRate}%`,
+      delta: `${channelRates.length} active channels`,
+      deltaTone: "success" as const,
+      icon: TrendingUp,
+      detailTitle: "Response Rate by Channel",
+      content: (
+        <ul className="mt-2 space-y-1.5">
+          {channelRates.map((entry) => (
+            <li key={entry.channel} className="text-xs text-muted-foreground">
+              {entry.channel}: {entry.rate}%
+            </li>
+          ))}
+        </ul>
+      ),
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {items.map((m) => (
         <div key={m.label} className="bg-card p-5 rounded-3xl border border-border shadow-card flex flex-col gap-3">
           <div className="flex items-start justify-between">
             <span className="text-sm font-medium text-muted-foreground">{m.label}</span>
-            <div className="size-9 rounded-xl bg-primary-soft text-primary flex items-center justify-center">
-              <m.icon className="size-4" />
+            <div className="flex items-center gap-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="size-7 rounded-lg border border-border text-muted-foreground flex items-center justify-center hover:bg-muted transition-colors"
+                    aria-label={`Show ${m.label} details`}
+                  >
+                    <ArrowUpRight className="size-3.5" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md rounded-2xl">
+                  <DialogHeader>
+                    <DialogTitle>{m.detailTitle}</DialogTitle>
+                  </DialogHeader>
+                  {m.content}
+                </DialogContent>
+              </Dialog>
+              <div className="size-9 rounded-xl bg-primary-soft text-primary flex items-center justify-center">
+                <m.icon className="size-4" />
+              </div>
             </div>
           </div>
           <div className="text-3xl font-bold tracking-tight tabular-nums">{m.value}</div>
@@ -58,4 +151,13 @@ export function MetricsRow() {
       ))}
     </div>
   );
+}
+
+function formatMeetingTime(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }

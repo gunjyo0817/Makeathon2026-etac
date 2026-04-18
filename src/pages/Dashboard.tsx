@@ -29,7 +29,7 @@ export default function Dashboard() {
           <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
         </header>
 
-        <MetricsRow />
+        <MetricsRow projectId={projectId} />
 
         <ConversationAttentionPanel items={attentionItems} />
 
