@@ -7,6 +7,16 @@ import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { ProjectSelector } from "@/components/sales/ProjectSelector";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type ViewMode = "day" | "3days" | "week" | "month";
 type LayoutMode = "calendar" | "list";
@@ -27,6 +37,7 @@ export default function Meetings() {
   const [anchorDate, setAnchorDate] = useState(stripTime(new Date()));
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("calendar");
   const [isSpotsDialogOpen, setIsSpotsDialogOpen] = useState(false);
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const [spotsDraft, setSpotsDraft] = useState<Record<string, string[]>>({});
   const [dragState, setDragState] = useState<{ dateKey: string; mode: "add" | "remove" } | null>(null);
   const [availabilityByProject, setAvailabilityByProject] = useState<Record<string, Record<string, string[]>>>(() =>
@@ -149,11 +160,17 @@ export default function Meetings() {
     setIsSpotsDialogOpen(true);
   };
 
-  const closeSpotsDialog = () => {
+  const requestCloseSpotsDialog = () => {
     if (hasSpotsDraftChanges) {
-      const discard = window.confirm("Discard unsaved available spot changes?");
-      if (!discard) return;
+      setIsDiscardConfirmOpen(true);
+      return;
     }
+    setIsSpotsDialogOpen(false);
+    setDragState(null);
+  };
+
+  const discardSpotsDialog = () => {
+    setIsDiscardConfirmOpen(false);
     setIsSpotsDialogOpen(false);
     setDragState(null);
   };
@@ -211,7 +228,7 @@ export default function Meetings() {
                 </button>
               ))}
             </div>
-            <Dialog open={isSpotsDialogOpen} onOpenChange={(open) => (open ? openSpotsDialog() : closeSpotsDialog())}>
+            <Dialog open={isSpotsDialogOpen} onOpenChange={(open) => (open ? openSpotsDialog() : requestCloseSpotsDialog())}>
               <DialogTrigger asChild>
                 <button onClick={openSpotsDialog} className="h-10 px-4 rounded-2xl border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
                   Available spots
@@ -253,7 +270,7 @@ export default function Meetings() {
                 )}
                 <div className="flex items-center justify-end gap-2">
                   <button
-                    onClick={closeSpotsDialog}
+                    onClick={requestCloseSpotsDialog}
                     className="h-10 px-4 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors"
                   >
                     X
@@ -340,6 +357,23 @@ export default function Meetings() {
             </div>
           </section>
         )}
+
+        <AlertDialog open={isDiscardConfirmOpen} onOpenChange={setIsDiscardConfirmOpen}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have unsaved available spot edits. If you close now, those changes will be lost.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl">Keep editing</AlertDialogCancel>
+              <AlertDialogAction onClick={discardSpotsDialog} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Discard
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppShell>
   );
