@@ -45,30 +45,32 @@ export default function Agents() {
           <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
         </header>
 
-        <div className="bg-card border border-border rounded-3xl p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Persona</div>
-              <ConfigureProjectContextDialog
-                persona={config?.persona ?? ""}
-                dataKnowledge={config?.dataKnowledge ?? ""}
-                onSave={(next) =>
-                  setConfigOverrides((prev) => ({
-                    ...prev,
-                    [projectId]: {
-                      ...(prev[projectId] ?? projectAgentConfigs[projectId]),
-                      persona: next.persona,
-                      dataKnowledge: next.dataKnowledge,
-                    },
-                  }))
-                }
-              />
-            </div>
-            <div className="text-sm mt-1.5 leading-relaxed">{config?.persona}</div>
+        <div className="bg-card border border-border rounded-3xl p-5">
+          <div className="flex items-center justify-end mb-3">
+            <ConfigureProjectContextDialog
+              persona={config?.persona ?? ""}
+              dataKnowledge={config?.dataKnowledge ?? ""}
+              onSave={(next) =>
+                setConfigOverrides((prev) => ({
+                  ...prev,
+                  [projectId]: {
+                    ...(prev[projectId] ?? projectAgentConfigs[projectId]),
+                    persona: next.persona,
+                    dataKnowledge: next.dataKnowledge,
+                  },
+                }))
+              }
+            />
           </div>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Knowledge Context</div>
-            <div className="text-sm mt-1.5 leading-relaxed">{config?.dataKnowledge}</div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Persona</div>
+              <div className="text-sm mt-1.5 leading-relaxed">{config?.persona}</div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Knowledge Context</div>
+              <div className="text-sm mt-1.5 leading-relaxed">{config?.dataKnowledge}</div>
+            </div>
           </div>
         </div>
 
