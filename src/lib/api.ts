@@ -221,6 +221,9 @@ export async function deleteTwinTableRows(
   return request(`/api/tables/${name}/rows`, {
     method: "DELETE",
     body: JSON.stringify({ rowKeys }),
+  });
+}
+
 export async function triggerFollowUpPhoneCall(customerId: string): Promise<{
   ok: boolean;
   customerId: string;

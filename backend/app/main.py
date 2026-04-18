@@ -505,6 +505,8 @@ async def booking_confirm(token: str, body: ConfirmBookingBody) -> dict[str, Any
         "booking_url": booking_url,
         **notify,
     }
+
+
 @app.post("/api/follow-up/call")
 async def trigger_follow_up_call(payload: FollowUpCallRequest) -> Any:
     customer_id = payload.customer_id.strip()
