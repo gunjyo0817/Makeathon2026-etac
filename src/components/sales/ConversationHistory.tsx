@@ -2,18 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { type Channel, type Lead, type Message } from "@/data/mock";
 import { formatTime, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ArrowRightLeft, Columns3, Linkedin, Mail, MessageCircle, MessageSquare, Phone, Sparkles } from "lucide-react";
+import { ArrowRightLeft, Columns3, Mail, MessageSquare, Phone, Sparkles } from "lucide-react";
 
 const CHANNEL_META: Record<Channel, { label: string; Icon: typeof Mail }> = {
   email: { label: "Email", Icon: Mail },
   sms: { label: "SMS", Icon: MessageSquare },
   phone: { label: "Phone", Icon: Phone },
-  linkedin: { label: "LinkedIn", Icon: Linkedin },
-  whatsapp: { label: "WhatsApp", Icon: MessageCircle },
-  chat: { label: "Live Chat", Icon: MessageCircle },
 };
 
-const SPLIT_CHANNELS: Channel[] = ["sms", "email", "phone"];
+const PRIMARY_CHANNELS: Channel[] = ["sms", "email", "phone"];
 
 export function ConversationHistory({ lead }: { lead: Lead }) {
   const [selectedChannel, setSelectedChannel] = useState<Channel>(lead.currentChannel);
@@ -28,14 +25,10 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
     () => lead.messages.filter((message) => message.channel === selectedChannel),
     [lead.messages, selectedChannel]
   );
-  const splitChannels = useMemo(
-    () => SPLIT_CHANNELS.filter((channel) => lead.availableChannels.includes(channel)),
-    [lead.availableChannels]
-  );
 
   const currentChannel = CHANNEL_META[selectedChannel];
   const headerCopy = isSplitView
-    ? `${splitChannels.length} channels side by side · with ${lead.name}`
+    ? `${PRIMARY_CHANNELS.length} channels side by side · with ${lead.name}`
     : `${visibleMessages.length} ${currentChannel.label.toLowerCase()} messages · with ${lead.name}`;
 
   return (
@@ -66,12 +59,12 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
             </div>
           </div>
           <div className="text-[11px] text-muted-foreground">
-            {lead.availableChannels.length} channels available for this lead
+            {PRIMARY_CHANNELS.length} channels available for this lead
           </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          {lead.availableChannels.map((channel) => {
+          {PRIMARY_CHANNELS.map((channel) => {
             const meta = CHANNEL_META[channel];
             const isActive = channel === selectedChannel;
             return (
@@ -110,10 +103,9 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
       {isSplitView ? (
         <div className="px-5 py-6 overflow-x-auto scrollbar-thin">
           <div className="grid min-w-[860px] grid-cols-3 gap-4">
-            {SPLIT_CHANNELS.map((channel) => {
+            {PRIMARY_CHANNELS.map((channel) => {
               const meta = CHANNEL_META[channel];
               const messages = lead.messages.filter((message) => message.channel === channel);
-              const supported = lead.availableChannels.includes(channel);
 
               return (
                 <div key={channel} className="min-h-[420px] rounded-2xl border border-border bg-background/80 flex flex-col overflow-hidden">
@@ -123,15 +115,11 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
                       {meta.label}
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                      {supported ? `${messages.length} messages` : "Not enabled"}
+                      {messages.length} messages
                     </div>
                   </div>
                   <div className="p-4 flex-1 overflow-y-auto scrollbar-thin">
-                    {supported ? (
-                      <MessageList messages={messages} channelLabel={meta.label} />
-                    ) : (
-                      <EmptyState message={`This lead is not currently using ${meta.label}.`} />
-                    )}
+                    <MessageList messages={messages} channelLabel={meta.label} />
                   </div>
                 </div>
               );
