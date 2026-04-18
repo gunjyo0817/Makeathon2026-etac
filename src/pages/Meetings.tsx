@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { leads, projects } from "@/data/mock";
+import { leads, projects, type Meeting } from "@/data/mock";
 import { MeetingTypeBadge } from "@/components/sales/Badges";
 import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { ProjectSelector } from "@/components/sales/ProjectSelector";
@@ -20,6 +20,7 @@ import {
 
 type ViewMode = "day" | "3days" | "week" | "month";
 type LayoutMode = "calendar" | "list";
+type MeetingWithLead = Meeting & { leadName: string };
 
 const viewModes: { id: ViewMode; label: string }[] = [
   { id: "day", label: "1 Day" },
@@ -38,6 +39,7 @@ export default function Meetings() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("calendar");
   const [isSpotsDialogOpen, setIsSpotsDialogOpen] = useState(false);
   const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState<MeetingWithLead | null>(null);
   const [spotsDraft, setSpotsDraft] = useState<Record<string, string[]>>({});
   const [dragState, setDragState] = useState<{ dateKey: string; mode: "add" | "remove" } | null>(null);
   const [availabilityByProject, setAvailabilityByProject] = useState<Record<string, Record<string, string[]>>>(() =>
@@ -45,7 +47,7 @@ export default function Meetings() {
   );
 
   const allMeetings = useMemo(
-    () =>
+    (): MeetingWithLead[] =>
       leads
         .filter((lead) => lead.projectId === projectId)
         .flatMap((lead) => lead.meetings.map((meeting) => ({ ...meeting, leadName: lead.name })))
@@ -264,7 +266,7 @@ export default function Meetings() {
                       paintSpot(date, slot, dragState.mode);
                     }}
                     onCellMouseUp={() => setDragState(null)}
-                    onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
+                    onMeetingClick={(meeting) => setSelectedMeeting(meeting)}
                     editable
                   />
                 )}
@@ -318,7 +320,7 @@ export default function Meetings() {
                 meetingByDate={meetingByDate}
                 availability={availability}
                 onToggleSpot={toggleSpot}
-                onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
+              onMeetingClick={(meeting) => setSelectedMeeting(meeting)}
                 editable={false}
               />
             )}
@@ -336,7 +338,7 @@ export default function Meetings() {
                     {items.map((meeting) => (
                       <button
                         key={meeting.id}
-                        onClick={() => navigate(`/leads/${meeting.leadId}`)}
+                          onClick={() => setSelectedMeeting(meeting)}
                         className="w-full text-left px-4 py-3 hover:bg-muted transition-colors"
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -374,6 +376,58 @@ export default function Meetings() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog open={!!selectedMeeting} onOpenChange={(open) => !open && setSelectedMeeting(null)}>
+          <DialogContent className="max-w-lg rounded-2xl">
+            {selectedMeeting && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Meeting detail</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  <div className="rounded-xl border border-border p-3">
+                    <div className="font-semibold">{selectedMeeting.customerName}</div>
+                    <div className="text-muted-foreground text-xs mt-1">{selectedMeeting.company}</div>
+                    <div className="mt-2">
+                      <MeetingTypeBadge type={selectedMeeting.type} />
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border p-3 space-y-1.5 text-xs text-muted-foreground">
+                    <div>
+                      <span className="font-semibold text-foreground">Time: </span>
+                      {new Date(selectedMeeting.start).toLocaleString([], {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                    <div>
+                      <span className="font-semibold text-foreground">Duration: </span>
+                      {selectedMeeting.durationMin} minutes
+                    </div>
+                    <div>
+                      <span className="font-semibold text-foreground">Lead: </span>
+                      {selectedMeeting.leadName}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => {
+                      navigate(`/leads/${selectedMeeting.leadId}`);
+                      setSelectedMeeting(null);
+                    }}
+                    className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Open lead detail
+                  </button>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppShell>
   );
@@ -399,7 +453,7 @@ function TimeGrid({
   onCellMouseDown?: (date: Date, slot: string, isAvailable: boolean) => void;
   onCellMouseEnter?: (date: Date, slot: string) => void;
   onCellMouseUp?: () => void;
-  onMeetingClick: (leadId: string) => void;
+  onMeetingClick: (meeting: MeetingWithLead) => void;
   editable: boolean;
 }) {
   const meetingsByDateSlot = useMemo(() => {
@@ -419,7 +473,7 @@ function TimeGrid({
   }, [dates, meetingByDate]);
 
   return (
-    <div className="overflow-auto max-h-[65vh]">
+    <div className="overflow-auto max-h-[78vh]">
       <div
         className="grid min-w-[680px] md:min-w-[900px]"
         style={{
@@ -438,7 +492,7 @@ function TimeGrid({
 
         {timeSlots.map((slot) => (
           <>
-            <div key={`label_${slot}`} className="border-r border-b border-border px-2 py-1.5 text-[10px] text-muted-foreground tabular-nums bg-background">
+            <div key={`label_${slot}`} className="border-r border-b border-border px-2 py-2.5 text-[10px] text-muted-foreground tabular-nums bg-background">
               {slot}
             </div>
             {dates.map((date) => {
@@ -462,19 +516,20 @@ function TimeGrid({
                     onCellMouseUp?.();
                   }}
                   className={cn(
-                    "relative border-r border-b border-border min-h-[24px] px-1 text-left transition-colors",
+                    "relative border-r border-b border-border min-h-[42px] px-1 text-left transition-colors",
                     isAvailable ? "bg-success-soft/70 hover:bg-success-soft border-success/30" : "hover:bg-muted/50",
                     editable && "cursor-pointer"
                   )}
                 >
                   {meetings.length > 0 && (
-                    <div className="absolute inset-1 rounded-md bg-info-soft border border-info/30 px-1.5 py-0.5 overflow-hidden">
+                    <div className="absolute inset-1 rounded-md bg-primary/15 border border-primary/40 px-1.5 py-0.5 overflow-hidden shadow-sm">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onMeetingClick(meetings[0].leadId);
+                          onMeetingClick(meetings[0]);
                         }}
-                        className="text-[10px] font-semibold text-info truncate w-full text-left"
+                        className="text-[11px] font-semibold text-foreground truncate w-full text-left leading-tight"
+                        title={meetings[0].customerName}
                       >
                         {meetings[0].customerName}
                       </button>
