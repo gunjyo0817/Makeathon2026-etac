@@ -21,6 +21,8 @@ import {
 type ViewMode = "day" | "3days" | "week" | "month";
 type LayoutMode = "calendar" | "list";
 type MeetingWithLead = Meeting & { leadName: string };
+type MeetingStatus = "scheduled" | "rescheduled" | "cancelled";
+type MeetingWithLeadRecord = MeetingWithLead & { projectId: string; status: MeetingStatus };
 
 const viewModes: { id: ViewMode; label: string }[] = [
   { id: "day", label: "1 Day" },
@@ -40,19 +42,30 @@ export default function Meetings() {
   const [isSpotsDialogOpen, setIsSpotsDialogOpen] = useState(false);
   const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingWithLead | null>(null);
+  const [rescheduleDraft, setRescheduleDraft] = useState("");
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [spotsDraft, setSpotsDraft] = useState<Record<string, string[]>>({});
   const [dragState, setDragState] = useState<{ dateKey: string; mode: "add" | "remove" } | null>(null);
   const [availabilityByProject, setAvailabilityByProject] = useState<Record<string, Record<string, string[]>>>(() =>
     Object.fromEntries(projects.map((project) => [project.id, {}]))
   );
+  const [meetingRecords, setMeetingRecords] = useState<MeetingWithLeadRecord[]>(() =>
+    leads.flatMap((lead) =>
+      lead.meetings.map((meeting) => ({
+        ...meeting,
+        leadName: lead.name,
+        projectId: lead.projectId,
+        status: "scheduled" as MeetingStatus,
+      }))
+    )
+  );
 
   const allMeetings = useMemo(
     (): MeetingWithLead[] =>
-      leads
-        .filter((lead) => lead.projectId === projectId)
-        .flatMap((lead) => lead.meetings.map((meeting) => ({ ...meeting, leadName: lead.name })))
+      meetingRecords
+        .filter((meeting) => meeting.projectId === projectId)
         .sort((a, b) => a.start.localeCompare(b.start)),
-    [projectId]
+    [meetingRecords, projectId]
   );
 
   const visibleDates = useMemo(() => {
@@ -184,6 +197,27 @@ export default function Meetings() {
     }));
     setIsSpotsDialogOpen(false);
     setDragState(null);
+  };
+
+  const selectedMeetingRecord = useMemo(
+    () => (selectedMeeting ? meetingRecords.find((meeting) => meeting.id === selectedMeeting.id) ?? null : null),
+    [meetingRecords, selectedMeeting]
+  );
+
+  const applyReschedule = () => {
+    if (!selectedMeetingRecord || !rescheduleDraft) return;
+    const iso = new Date(rescheduleDraft).toISOString();
+    setMeetingRecords((prev) =>
+      prev.map((meeting) => (meeting.id === selectedMeetingRecord.id ? { ...meeting, start: iso, status: "rescheduled" } : meeting))
+    );
+    setSelectedMeeting((prev) => (prev ? { ...prev, start: iso } : prev));
+    setRescheduleDraft("");
+  };
+
+  const applyCancel = () => {
+    if (!selectedMeetingRecord) return;
+    setMeetingRecords((prev) => prev.map((meeting) => (meeting.id === selectedMeetingRecord.id ? { ...meeting, status: "cancelled" } : meeting)));
+    setIsCancelConfirmOpen(false);
   };
 
   return (
@@ -329,7 +363,7 @@ export default function Meetings() {
           <section className="bg-card border border-border rounded-3xl p-4 shadow-card">
             <div className="text-sm font-semibold mb-3">List view</div>
             <div className="space-y-4">
-              {groupedMeetings.map(([date, items]) => (
+                {groupedMeetings.map(([date, items]) => (
                 <div key={date}>
                   <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
                     {new Date(date).toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
@@ -379,7 +413,7 @@ export default function Meetings() {
 
         <Dialog open={!!selectedMeeting} onOpenChange={(open) => !open && setSelectedMeeting(null)}>
           <DialogContent className="max-w-lg rounded-2xl">
-            {selectedMeeting && (
+            {selectedMeeting && selectedMeetingRecord && (
               <>
                 <DialogHeader>
                   <DialogTitle>Meeting detail</DialogTitle>
@@ -388,8 +422,9 @@ export default function Meetings() {
                   <div className="rounded-xl border border-border p-3">
                     <div className="font-semibold">{selectedMeeting.customerName}</div>
                     <div className="text-muted-foreground text-xs mt-1">{selectedMeeting.company}</div>
-                    <div className="mt-2">
+                    <div className="mt-2 flex items-center gap-2">
                       <MeetingTypeBadge type={selectedMeeting.type} />
+                      <StatusBadge status={selectedMeetingRecord.status} />
                     </div>
                   </div>
                   <div className="rounded-xl border border-border p-3 space-y-1.5 text-xs text-muted-foreground">
@@ -412,8 +447,32 @@ export default function Meetings() {
                       {selectedMeeting.leadName}
                     </div>
                   </div>
+                  <div className="rounded-xl border border-border p-3 space-y-2">
+                    <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Reschedule</div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="datetime-local"
+                        value={rescheduleDraft}
+                        onChange={(e) => setRescheduleDraft(e.target.value)}
+                        className="h-10 px-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 flex-1"
+                      />
+                      <button
+                        onClick={applyReschedule}
+                        className="h-10 px-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        Reschedule
+                      </button>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">Pick a new date/time and apply immediately.</div>
+                  </div>
                 </div>
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-between items-center pt-2">
+                  <button
+                    onClick={() => setIsCancelConfirmOpen(true)}
+                    className="h-10 px-4 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold hover:bg-destructive/10 transition-colors"
+                  >
+                    Cancel meeting
+                  </button>
                   <button
                     onClick={() => {
                       navigate(`/leads/${selectedMeeting.leadId}`);
@@ -428,9 +487,34 @@ export default function Meetings() {
             )}
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={isCancelConfirmOpen} onOpenChange={setIsCancelConfirmOpen}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel this meeting?</AlertDialogTitle>
+              <AlertDialogDescription>This marks the meeting as cancelled in the schedule.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl">Keep meeting</AlertDialogCancel>
+              <AlertDialogAction onClick={applyCancel} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Cancel meeting
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppShell>
   );
+}
+
+function StatusBadge({ status }: { status: MeetingStatus }) {
+  const tone =
+    status === "scheduled"
+      ? "bg-info-soft text-info"
+      : status === "rescheduled"
+        ? "bg-warning-soft text-warning"
+        : "bg-destructive/10 text-destructive";
+  return <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", tone)}>{status}</span>;
 }
 
 function TimeGrid({
