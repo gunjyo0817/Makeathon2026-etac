@@ -122,7 +122,12 @@ export default function ProjectDetail() {
               value={`${projectLeads.length} leads`}
               onClick={() => projectLeadsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
             />
-            <SummaryPill icon={CalendarRange} label="Meetings" value={`${meetings.length} booked`} />
+            <SummaryPill
+              icon={CalendarRange}
+              label="Meetings"
+              value={`${meetings.length} booked`}
+              onClick={() => navigate(`/meetings?projectId=${project.id}`)}
+            />
             <SummaryPill icon={MessageSquareMore} label="Response rate" value={`${responseRate}%`} />
           </div>
         </header>
