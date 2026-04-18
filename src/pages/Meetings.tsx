@@ -6,6 +6,7 @@ import { MeetingTypeBadge } from "@/components/sales/Badges";
 import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { ProjectSelector } from "@/components/sales/ProjectSelector";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 type ViewMode = "day" | "3days" | "week" | "month";
 
@@ -23,6 +24,7 @@ export default function Meetings() {
   const [projectId, setProjectId] = useState(projects[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [anchorDate, setAnchorDate] = useState(stripTime(new Date()));
+  const [showList, setShowList] = useState(false);
   const [availabilityByProject, setAvailabilityByProject] = useState<Record<string, Record<string, string[]>>>(() =>
     Object.fromEntries(projects.map((project) => [project.id, {}]))
   );
@@ -83,15 +85,16 @@ export default function Meetings() {
     [allMeetings, visibleDates]
   );
 
-  const availableSpotSummary = useMemo(() => {
-    return visibleDates
-      .map((date) => {
-        const key = dateKey(date);
-        const slots = availability[key] ?? [];
-        return { date, slots };
-      })
-      .filter((item) => item.slots.length > 0);
-  }, [availability, visibleDates]);
+  const groupedMeetings = useMemo(() => {
+    const map = new Map<string, typeof scopedMeetings>();
+    scopedMeetings.forEach((meeting) => {
+      const key = new Date(meeting.start).toDateString();
+      const current = map.get(key) ?? [];
+      current.push(meeting);
+      map.set(key, current);
+    });
+    return Array.from(map.entries());
+  }, [scopedMeetings]);
 
   const stepRange = (dir: -1 | 1) => {
     if (viewMode === "day") return addDays(anchorDate, dir);
@@ -123,7 +126,7 @@ export default function Meetings() {
         <header className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Meetings</h1>
-            <p className="text-muted-foreground mt-2 text-sm">Google Calendar style planning + click-to-highlight available spots for agent booking.</p>
+            <p className="text-muted-foreground mt-2 text-sm">Calendar-first scheduling. Agents use your available spots to open booking windows to leads.</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
@@ -141,6 +144,37 @@ export default function Meetings() {
                 </button>
               ))}
             </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="h-10 px-4 rounded-2xl border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
+                  Available spots
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl rounded-2xl">
+                <DialogHeader>
+                  <DialogTitle>Available spots</DialogTitle>
+                </DialogHeader>
+                <p className="text-xs text-muted-foreground -mt-2">Click time cells to highlight/unhighlight available booking slots.</p>
+                {viewMode === "month" ? (
+                  <MonthGrid
+                    dates={visibleDates}
+                    meetingByDate={meetingByDate}
+                    availability={availability}
+                    onDayClick={(date) => setAnchorDate(date)}
+                  />
+                ) : (
+                  <TimeGrid
+                    dates={visibleDates}
+                    timeSlots={timeSlots}
+                    meetingByDate={meetingByDate}
+                    availability={availability}
+                    onToggleSpot={toggleSpot}
+                    onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
+                    editable
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
             <div className="flex items-center gap-1 bg-card border border-border rounded-2xl px-2 py-1.5 shadow-soft">
               <button onClick={() => setAnchorDate(stepRange(-1))} className="size-8 rounded-lg hover:bg-muted flex items-center justify-center">
                 <ChevronLeft className="size-4" />
@@ -156,81 +190,73 @@ export default function Meetings() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6 items-start">
-          <section className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
-            {viewMode === "month" ? (
-              <MonthGrid
-                dates={visibleDates}
-                meetingByDate={meetingByDate}
-                availability={availability}
-                onDayClick={(date) => {
-                  setAnchorDate(date);
-                  setViewMode("day");
-                }}
-              />
-            ) : (
-              <TimeGrid
-                dates={visibleDates}
-                timeSlots={timeSlots}
-                meetingByDate={meetingByDate}
-                availability={availability}
-                onToggleSpot={toggleSpot}
-                onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
-              />
-            )}
-          </section>
+        <section className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
+          {viewMode === "month" ? (
+            <MonthGrid
+              dates={visibleDates}
+              meetingByDate={meetingByDate}
+              availability={availability}
+              onDayClick={(date) => {
+                setAnchorDate(date);
+                setViewMode("day");
+              }}
+            />
+          ) : (
+            <TimeGrid
+              dates={visibleDates}
+              timeSlots={timeSlots}
+              meetingByDate={meetingByDate}
+              availability={availability}
+              onToggleSpot={toggleSpot}
+              onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
+              editable={false}
+            />
+          )}
+        </section>
 
-          <aside className="bg-card border border-border rounded-3xl shadow-card p-5 flex flex-col gap-4">
-            <div>
-              <h2 className="text-base font-bold tracking-tight">Available spots</h2>
-              <p className="text-xs text-muted-foreground mt-1">Click any time cell to highlight available slots. Agents immediately use highlighted spots for lead booking.</p>
-            </div>
-
-            <div className="rounded-2xl border border-border p-3 bg-muted/40">
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">How to edit</div>
-              <div className="text-xs text-muted-foreground mt-1.5">Click a slot once to add availability. Click again to remove it.</div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Your available spots</div>
-              {availableSpotSummary.length === 0 ? (
-                <div className="text-xs text-muted-foreground rounded-xl border border-border p-3">No highlighted slots in current range.</div>
-              ) : (
-                <div className="rounded-2xl border border-border divide-y divide-border max-h-[420px] overflow-auto">
-                  {availableSpotSummary.map((item) => (
-                    <div key={dateKey(item.date)} className="px-3 py-2.5">
-                      <div className="text-xs font-semibold">{item.date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</div>
-                      <div className="text-[11px] text-muted-foreground mt-1">{item.slots.join(", ")}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Meetings in range</div>
-              <div className="space-y-2">
-                {scopedMeetings.slice(0, 6).map((meeting) => (
-                  <button
-                    key={meeting.id}
-                    onClick={() => navigate(`/leads/${meeting.leadId}`)}
-                    className="w-full text-left rounded-xl border border-border px-3 py-2 hover:bg-muted transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold truncate">{meeting.customerName}</span>
-                      <MeetingTypeBadge type={meeting.type} />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
-                      <Clock className="size-3" />
-                      {new Date(meeting.start).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}
-                    </div>
-                  </button>
-                ))}
-                {scopedMeetings.length === 0 && <div className="text-xs text-muted-foreground rounded-xl border border-border p-3">No meetings in this range.</div>}
-              </div>
-            </div>
-          </aside>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowList((prev) => !prev)}
+            className="h-10 px-4 rounded-2xl border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors"
+          >
+            {showList ? "Hide list view" : "Show list view"}
+          </button>
         </div>
+
+        {showList && (
+          <section className="bg-card border border-border rounded-3xl p-4 shadow-card">
+            <div className="text-sm font-semibold mb-3">List view</div>
+            <div className="space-y-4">
+              {groupedMeetings.map(([date, items]) => (
+                <div key={date}>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                    {new Date(date).toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
+                  </div>
+                  <div className="divide-y divide-border rounded-2xl border border-border overflow-hidden">
+                    {items.map((meeting) => (
+                      <button
+                        key={meeting.id}
+                        onClick={() => navigate(`/leads/${meeting.leadId}`)}
+                        className="w-full text-left px-4 py-3 hover:bg-muted transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold">{meeting.customerName}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {new Date(meeting.start).toLocaleString([], { hour: "numeric", minute: "2-digit" })} - {meeting.company}
+                            </div>
+                          </div>
+                          <MeetingTypeBadge type={meeting.type} />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {groupedMeetings.length === 0 && <div className="text-sm text-muted-foreground">No meetings in this range.</div>}
+            </div>
+          </section>
+        )}
       </div>
     </AppShell>
   );
@@ -243,6 +269,7 @@ function TimeGrid({
   availability,
   onToggleSpot,
   onMeetingClick,
+  editable,
 }: {
   dates: Date[];
   timeSlots: string[];
@@ -250,6 +277,7 @@ function TimeGrid({
   availability: Record<string, string[]>;
   onToggleSpot: (date: Date, slot: string) => void;
   onMeetingClick: (leadId: string) => void;
+  editable: boolean;
 }) {
   const meetingsByDateSlot = useMemo(() => {
     const map = new Map<string, any[]>();
@@ -295,12 +323,13 @@ function TimeGrid({
               const isAvailable = (availability[dKey] ?? []).includes(slot);
               const meetings = meetingsByDateSlot.get(`${dKey}_${slot}`) ?? [];
               return (
-                <button
+                <div
                   key={`${dKey}_${slot}`}
-                  onClick={() => onToggleSpot(date, slot)}
+                  onClick={() => editable && onToggleSpot(date, slot)}
                   className={cn(
                     "relative border-r border-b border-border min-h-[34px] px-1 text-left transition-colors",
-                    isAvailable ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-muted/50"
+                    isAvailable ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-muted/50",
+                    editable && "cursor-pointer"
                   )}
                 >
                   {meetings.length > 0 && (
@@ -316,7 +345,7 @@ function TimeGrid({
                       </button>
                     </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </>
