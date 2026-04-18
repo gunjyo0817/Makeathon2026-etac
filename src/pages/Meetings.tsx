@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 type ViewMode = "day" | "3days" | "week" | "month";
+type LayoutMode = "calendar" | "list";
 
 const viewModes: { id: ViewMode; label: string }[] = [
   { id: "day", label: "1 Day" },
@@ -24,7 +25,7 @@ export default function Meetings() {
   const [projectId, setProjectId] = useState(projects[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [anchorDate, setAnchorDate] = useState(stripTime(new Date()));
-  const [showList, setShowList] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("calendar");
   const [isSpotsDialogOpen, setIsSpotsDialogOpen] = useState(false);
   const [spotsDraft, setSpotsDraft] = useState<Record<string, string[]>>({});
   const [dragState, setDragState] = useState<{ dateKey: string; mode: "add" | "remove" } | null>(null);
@@ -177,6 +178,26 @@ export default function Meetings() {
           <div className="flex items-center gap-3 flex-wrap">
             <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
             <div className="flex items-center rounded-2xl border border-border bg-card p-1">
+              <button
+                onClick={() => setLayoutMode("calendar")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-semibold rounded-xl",
+                  layoutMode === "calendar" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Calendar
+              </button>
+              <button
+                onClick={() => setLayoutMode("list")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-semibold rounded-xl",
+                  layoutMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                List
+              </button>
+            </div>
+            <div className="flex items-center rounded-2xl border border-border bg-card p-1">
               {viewModes.map((mode) => (
                 <button
                   key={mode.id}
@@ -261,40 +282,31 @@ export default function Meetings() {
           </div>
         </header>
 
-        <section className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
-          {viewMode === "month" ? (
-            <MonthGrid
-              dates={visibleDates}
-              meetingByDate={meetingByDate}
-              availability={availability}
-              onDayClick={(date) => {
-                setAnchorDate(date);
-                setViewMode("day");
-              }}
-            />
-          ) : (
-            <TimeGrid
-              dates={visibleDates}
-              timeSlots={timeSlots}
-              meetingByDate={meetingByDate}
-              availability={availability}
-              onToggleSpot={toggleSpot}
-              onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
-              editable={false}
-            />
-          )}
-        </section>
-
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowList((prev) => !prev)}
-            className="h-10 px-4 rounded-2xl border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors"
-          >
-            {showList ? "Hide list view" : "Show list view"}
-          </button>
-        </div>
-
-        {showList && (
+        {layoutMode === "calendar" ? (
+          <section className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
+            {viewMode === "month" ? (
+              <MonthGrid
+                dates={visibleDates}
+                meetingByDate={meetingByDate}
+                availability={availability}
+                onDayClick={(date) => {
+                  setAnchorDate(date);
+                  setViewMode("day");
+                }}
+              />
+            ) : (
+              <TimeGrid
+                dates={visibleDates}
+                timeSlots={timeSlots}
+                meetingByDate={meetingByDate}
+                availability={availability}
+                onToggleSpot={toggleSpot}
+                onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
+                editable={false}
+              />
+            )}
+          </section>
+        ) : (
           <section className="bg-card border border-border rounded-3xl p-4 shadow-card">
             <div className="text-sm font-semibold mb-3">List view</div>
             <div className="space-y-4">
