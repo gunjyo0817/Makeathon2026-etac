@@ -54,6 +54,7 @@ Request/data flow:
 
 - `src/` - frontend app
 - `backend/` - FastAPI backend service
+- `vercel.json` - SPA fallback (client-side routes like `/leads/:id` resolve to `index.html` on refresh)
 - `render.yaml` / `start.sh` - optional Render deploy (monorepo: start from repo root)
 
 ## Prerequisites
@@ -84,7 +85,9 @@ No trailing slash. Restart `npm run dev` after changing env files.
 
 For production hosting (Vercel, Netlify, etc.), set the same variable in the host’s environment settings and rebuild.
 
-**Vercel:** `vercel.json` rewrites client-side routes (e.g. `/leads/1`) to `index.html` so refresh/deep links do not 404.
+### Vercel
+
+Point `VITE_API_BASE_URL` at your deployed API (e.g. Render). `vercel.json` rewrites requests to `index.html` so client routes (e.g. `/leads/1`) survive refresh and deep links.
 
 ## Backend Setup
 
@@ -96,10 +99,12 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Set your API key in `backend/.env`:
+Set secrets in `backend/.env` (see `backend/.env.example`):
 
 ```env
 HAPPYROBOT_API_KEY=sk_live_xxx
+# Browser CORS: "*" = any origin (default). Comma list for explicit origins + credentials.
+CORS_ORIGINS=*
 ```
 
 Run backend (from `backend/`):
@@ -115,14 +120,15 @@ This repo is a **monorepo** (`backend/` is not the git root). Options:
 1. **Blueprint:** use `render.yaml` at the repo root (`buildCommand` installs `backend/requirements.txt`, `startCommand` runs `start.sh` which `cd`s into `backend/` before `uvicorn`).
 2. **Manual service:** set **Build** to `pip install -r backend/requirements.txt`, **Start** to `bash start.sh`, and leave **Root Directory** empty (or the repo root).
 
-Set secrets in Render: `HAPPYROBOT_API_KEY`, and optionally `HAPPYROBOT_BASE_URL` for the EU platform.
+Set secrets in Render: `HAPPYROBOT_API_KEY`, and optionally `HAPPYROBOT_BASE_URL` for the EU platform. Set `CORS_ORIGINS` if the SPA is on a different host (default `*` is fine for typical API-key flows).
 
 ### CORS
 
-If the frontend is on another origin, add that origin in `backend/app/main.py` (`CORSMiddleware`) and redeploy the API.
+Configured via `CORS_ORIGINS` in `backend/.env` (see `backend/app/config.py` / `main.py`). `*` allows any browser origin without credentials; a comma-separated list merges with dev localhost origins and enables credentials.
 
 ## Backend API
 
+- `GET /` — service name, links to `/health` and `/docs`
 - `GET /health`
 - `GET /api/schema`
 - `GET /api/tables/{table_name}`
@@ -135,6 +141,7 @@ If the frontend is on another origin, add that origin in `backend/app/main.py` (
 - `GET /api/leads`
 - `POST /api/leads`
 - `GET /api/transcripts?customer_id=` — transcript rows for a lead (`customer_id` matches lead id)
+- `GET /api/conversations/latest-assignment?lead_id=` — latest `etac_conversation` row for a lead (by `follow_up_date`), including assigned product id
 
 ## Quick Test
 
