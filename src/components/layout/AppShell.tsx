@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FolderKanban, Users, Calendar, BarChart3, Settings, Sparkles, Search, Bell, Bot } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Users, Calendar, BarChart3, Settings, Search, Bell, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -17,9 +17,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-dvh bg-background text-foreground">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="relative flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar />
         <main className="flex-1 overflow-y-auto scrollbar-thin">{children}</main>
+        <div
+          aria-hidden="true"
+          className="group absolute bottom-6 right-8 aspect-square w-40 max-w-[22vw] overflow-hidden"
+        >
+          <img
+            src="/IMG_0615.PNG"
+            alt=""
+            className="size-full scale-125 object-cover opacity-90 transition-opacity duration-200 group-hover:opacity-0"
+          />
+        </div>
       </div>
     </div>
   );
@@ -30,9 +40,7 @@ function Sidebar() {
   return (
     <aside className="w-64 shrink-0 m-3 mr-0 bg-sidebar rounded-3xl border border-sidebar-border shadow-card flex flex-col">
       <div className="p-6 flex items-center gap-3">
-        <div className="size-9 rounded-xl bg-gradient-clay text-primary-foreground flex items-center justify-center shadow-clay">
-          <Sparkles className="size-4" strokeWidth={2.5} />
-        </div>
+        <img src="/IMG_0615.PNG" alt="Etac logo" className="size-14 shrink-0 scale-125 object-cover" />
         <div>
           <div className="font-bold tracking-tight text-lg leading-none">Etac</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Product Sales</div>
