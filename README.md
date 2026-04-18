@@ -1,10 +1,22 @@
-# Makeathon Hangarian
+<div align="center">
+  <img src="public/IMG_0615.PNG" width="160" alt="Etac" />
+</div>
 
-Frontend + FastAPI backend for ETAC products/leads workflows using HappyRobot Twin APIs.
+# Etac
+
+**Etac** is our product: the AI-assisted **sales operations agent** and the branded console (“Etac · PRODUCT SALES”) that reps actually use. It is the layer where **catalog, leads, and conversation transcripts** stay in sync—backed by HappyRobot **Twin** data (`etac_products`, `etac_leads`, `etac_transcript`, …), not scattered spreadsheets or one-off scripts. Humans stay in control (pause, take over, review); Etac handles the heavy lifting of structured outreach and context.
+
+Etac 是我們對外產品名稱：不只是聊天機器人外掛，而是**業務每天進來操作的那個工作台**——串商品、名單與對話紀錄，並與後端 Twin API 對接。
+
+---
+
+## Makeathon Hangarian (this repository)
+
+Frontend + FastAPI backend that powers the Etac web app and proxies HappyRobot Twin APIs.
 
 ## What This Website Does
 
-This project is a lightweight sales operations console for ETAC.
+This project implements the Etac console: a lightweight sales operations UI for teams selling with structured product data (e.g. furniture), lead pipelines, and transcript-backed conversation views.
 It helps teams manage product data, capture incoming leads, and run lead handling flows with HappyRobot-backed data.
 
 Core goals:
