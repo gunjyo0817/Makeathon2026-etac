@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import CustomerDetail from "./pages/CustomerDetail.tsx";
 import Projects from "./pages/Projects.tsx";
 import Leads from "./pages/Leads.tsx";
+import Agents from "./pages/Agents.tsx";
 import Meetings from "./pages/Meetings.tsx";
 import Analytics from "./pages/Analytics.tsx";
 import Settings from "./pages/Settings.tsx";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/leads" element={<Leads />} />
+          <Route path="/agents" element={<Agents />} />
           <Route path="/leads/:id" element={<CustomerDetail />} />
           <Route path="/meetings" element={<Meetings />} />
           <Route path="/analytics" element={<Analytics />} />
