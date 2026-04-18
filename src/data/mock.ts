@@ -8,6 +8,7 @@ export type LeadStatus =
   | "closed";
 
 export type MeetingType = "demo" | "follow-up" | "intro";
+export type Channel = "email" | "sms" | "phone" | "linkedin" | "whatsapp" | "chat";
 
 export interface Project {
   id: string;
@@ -21,6 +22,7 @@ export interface Message {
   id: string;
   sender: "agent" | "customer";
   senderName: string;
+  channel: Channel;
   text: string;
   timestamp: string; // ISO
 }
@@ -58,6 +60,8 @@ export interface Lead {
   urgency: "Low" | "Medium" | "High";
   interestLevel: "Low" | "Medium" | "High";
   agentPaused: boolean;
+  currentChannel: Channel;
+  availableChannels: Channel[];
   messages: Message[];
   actions: AgentAction[];
   meetings: Meeting[];
@@ -87,6 +91,17 @@ const isoDay = (offsetDay: number, hour = 10, minute = 0) => {
   return d.toISOString();
 };
 
+const getLastMessageChannel = (messages: Message[] | undefined) => {
+  if (!messages || messages.length === 0) return "email" as Channel;
+  return messages[messages.length - 1].channel;
+};
+
+const getAvailableChannels = (messages: Message[] | undefined, fallback: Channel) => {
+  const discovered = new Set(messages?.map((message) => message.channel) ?? []);
+  discovered.add(fallback);
+  return Array.from(discovered);
+};
+
 const make = (l: Partial<Lead> & Pick<Lead, "id" | "projectId" | "name" | "role" | "company" | "status" | "temperature">): Lead => ({
   email: `${l.name!.split(" ")[0].toLowerCase()}@${l.company!.toLowerCase().replace(/\s+/g, "")}.com`,
   lastInteractionAt: iso(-Math.floor(Math.random() * 600) - 30),
@@ -95,6 +110,8 @@ const make = (l: Partial<Lead> & Pick<Lead, "id" | "projectId" | "name" | "role"
   urgency: "Medium",
   interestLevel: "Medium",
   agentPaused: false,
+  currentChannel: l.currentChannel ?? getLastMessageChannel(l.messages),
+  availableChannels: l.availableChannels ?? getAvailableChannels(l.messages, l.currentChannel ?? getLastMessageChannel(l.messages)),
   messages: [],
   actions: [],
   meetings: [],
@@ -107,12 +124,14 @@ export const leads: Lead[] = [
     status: "responded", temperature: "hot", intentScore: 87, budget: "$80k–$120k ARR",
     urgency: "High", interestLevel: "High",
     lastInteractionAt: iso(-23),
+    currentChannel: "sms",
+    availableChannels: ["email", "phone", "sms"],
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", text: "Hi Sarah — I noticed Meridian recently expanded into the Pacific Northwest. We help logistics teams reduce dispatch overhead by 30%. Worth a quick chat?", timestamp: iso(-2880) },
-      { id: "m2", sender: "customer", senderName: "Sarah Chen", text: "Hey — interesting timing. We're actually evaluating tools right now. Can you share more about how it integrates with our existing TMS?", timestamp: iso(-2700) },
-      { id: "m3", sender: "agent", senderName: "Aura AI", text: "Great question. We have a native integration with the top 5 TMS platforms. Could you confirm which one you're on so I can pull up the right docs?", timestamp: iso(-2640) },
-      { id: "m4", sender: "customer", senderName: "Sarah Chen", text: "We use MercuryGate. Also — what's the typical onboarding timeline?", timestamp: iso(-180) },
-      { id: "m5", sender: "agent", senderName: "Aura AI", text: "MercuryGate is fully supported. Onboarding is typically 2–3 weeks. I can send a few times for a 20-min walkthrough — does Thursday or Friday afternoon work?", timestamp: iso(-23) },
+      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "email", text: "Hi Sarah — I noticed Meridian recently expanded into the Pacific Northwest. We help logistics teams reduce dispatch overhead by 30%. Worth a quick chat?", timestamp: iso(-2880) },
+      { id: "m2", sender: "customer", senderName: "Sarah Chen", channel: "email", text: "Hey — interesting timing. We're actually evaluating tools right now. Can you share more about how it integrates with our existing TMS?", timestamp: iso(-2700) },
+      { id: "m3", sender: "agent", senderName: "Aura AI", channel: "phone", text: "Quick call recap: MercuryGate is fully supported and onboarding is usually 2–3 weeks.", timestamp: iso(-220) },
+      { id: "m4", sender: "customer", senderName: "Sarah Chen", channel: "sms", text: "We use MercuryGate. Also — what's the typical onboarding timeline?", timestamp: iso(-180) },
+      { id: "m5", sender: "agent", senderName: "Aura AI", channel: "sms", text: "MercuryGate is fully supported. I can send a few times for a 20-min walkthrough — does Thursday or Friday afternoon work?", timestamp: iso(-23) },
     ],
     actions: [
       { id: "a1", title: "Send meeting link with 3 time slots", reason: "Lead replied positively but has not chosen a meeting slot yet.", scheduledFor: iso(60), priority: "high" },
@@ -125,10 +144,12 @@ export const leads: Lead[] = [
     status: "qualified", temperature: "hot", intentScore: 92, budget: "$45k–$60k ARR",
     urgency: "High", interestLevel: "High",
     lastInteractionAt: iso(-90),
+    currentChannel: "phone",
+    availableChannels: ["email", "phone"],
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", text: "Marcus — saw your team is hiring 5 SDRs. Curious if you've considered AI-assisted prospecting?", timestamp: iso(-4320) },
-      { id: "m2", sender: "customer", senderName: "Marcus Webb", text: "Yes, evaluating now. Send me a deck.", timestamp: iso(-4000) },
-      { id: "m3", sender: "agent", senderName: "Aura AI", text: "Sent. Also looped in our solutions architect for the technical questions you raised.", timestamp: iso(-90) },
+      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "email", text: "Marcus — saw your team is hiring 5 SDRs. Curious if you've considered AI-assisted prospecting?", timestamp: iso(-4320) },
+      { id: "m2", sender: "customer", senderName: "Marcus Webb", channel: "email", text: "Yes, evaluating now. Send me a deck.", timestamp: iso(-4000) },
+      { id: "m3", sender: "agent", senderName: "Aura AI", channel: "phone", text: "Call summary: deck sent, solutions architect looped in, and Thursday afternoon works for the demo.", timestamp: iso(-90) },
     ],
     actions: [
       { id: "a1", title: "Confirm pricing tier with sales lead", reason: "Lead requested enterprise pricing — needs human approval.", scheduledFor: iso(30), priority: "high" },
@@ -142,10 +163,12 @@ export const leads: Lead[] = [
     status: "meeting", temperature: "hot", intentScore: 89, budget: "$120k+ ARR",
     urgency: "High", interestLevel: "High",
     lastInteractionAt: iso(-200),
+    currentChannel: "whatsapp",
+    availableChannels: ["email", "whatsapp"],
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", text: "Elena — congrats on the Series C. Quick question: how is your team currently handling outbound to enterprise retail?", timestamp: iso(-7200) },
-      { id: "m2", sender: "customer", senderName: "Elena Vasquez", text: "Manually, mostly. Open to a conversation.", timestamp: iso(-7000) },
-      { id: "m3", sender: "agent", senderName: "Aura AI", text: "Booked you in for Thursday at 10:30am with our CEO. Calendar invite sent.", timestamp: iso(-200) },
+      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "email", text: "Elena — congrats on the Series C. Quick question: how is your team currently handling outbound to enterprise retail?", timestamp: iso(-7200) },
+      { id: "m2", sender: "customer", senderName: "Elena Vasquez", channel: "email", text: "Manually, mostly. Open to a conversation.", timestamp: iso(-7000) },
+      { id: "m3", sender: "agent", senderName: "Aura AI", channel: "whatsapp", text: "Booked you in for Thursday at 10:30am with our CEO. Calendar invite sent.", timestamp: iso(-200) },
     ],
     actions: [
       { id: "a1", title: "Send pre-meeting brief to CEO", reason: "Important enterprise meeting — internal prep needed.", scheduledFor: iso(-30), priority: "high" },
@@ -158,8 +181,10 @@ export const leads: Lead[] = [
     id: "l4", projectId: "p1", name: "James O'Connor", role: "CTO", company: "Nereus Bio",
     status: "contacted", temperature: "warm", intentScore: 64,
     lastInteractionAt: iso(-1440),
+    currentChannel: "linkedin",
+    availableChannels: ["linkedin", "email"],
     messages: [
-      { id: "m1", sender: "agent", senderName: "Aura AI", text: "James — reached out via your LinkedIn post on data infra. Worth a 15-min chat?", timestamp: iso(-1440) },
+      { id: "m1", sender: "agent", senderName: "Aura AI", channel: "linkedin", text: "James — reached out via your LinkedIn post on data infra. Worth a 15-min chat?", timestamp: iso(-1440) },
     ],
     actions: [
       { id: "a1", title: "Follow up in 2 days", reason: "Initial outreach unanswered. Soft second touch recommended.", scheduledFor: iso(2880), priority: "medium" },
@@ -169,6 +194,8 @@ export const leads: Lead[] = [
     id: "l5", projectId: "p1", name: "Priya Anand", role: "Head of Growth", company: "Aethelgard Dynamics",
     status: "new", temperature: "cold", intentScore: 38,
     lastInteractionAt: iso(-60),
+    currentChannel: "email",
+    availableChannels: ["email", "phone", "linkedin"],
     actions: [
       { id: "a1", title: "Send first-touch personalized email", reason: "Lead just enriched. Initial sequence starts now.", scheduledFor: iso(15), priority: "medium" },
     ],
@@ -177,6 +204,8 @@ export const leads: Lead[] = [
     id: "l6", projectId: "p1", name: "David Park", role: "RevOps Lead", company: "Solstice Energy",
     status: "qualified", temperature: "warm", intentScore: 71, budget: "$30k–$50k ARR",
     lastInteractionAt: iso(-320),
+    currentChannel: "email",
+    availableChannels: ["email", "phone"],
     actions: [
       { id: "a1", title: "Ask about budget approval timeline", reason: "Stage is qualified but budget signal is missing.", scheduledFor: iso(180), priority: "medium" },
     ],
@@ -188,6 +217,8 @@ export const leads: Lead[] = [
     id: "l7", projectId: "p1", name: "Hannah Liu", role: "VP Product", company: "Oculus Freight",
     status: "responded", temperature: "warm", intentScore: 66,
     lastInteractionAt: iso(-440),
+    currentChannel: "email",
+    availableChannels: ["email", "chat", "phone"],
     actions: [
       { id: "a1", title: "Escalate to human sales rep", reason: "Customer asked complex security/compliance questions outside agent scope.", scheduledFor: iso(45), priority: "high" },
     ],
@@ -196,6 +227,8 @@ export const leads: Lead[] = [
     id: "l8", projectId: "p1", name: "Tom Reyes", role: "COO", company: "Vanguard Logistics",
     status: "meeting", temperature: "warm", intentScore: 74,
     lastInteractionAt: iso(-720),
+    currentChannel: "phone",
+    availableChannels: ["phone", "email"],
     meetings: [
       { id: "mt4", leadId: "l8", customerName: "Tom Reyes", company: "Vanguard Logistics", type: "intro", start: isoDay(0, 9, 30), durationMin: 30 },
     ],
@@ -204,21 +237,29 @@ export const leads: Lead[] = [
     id: "l9", projectId: "p1", name: "Ingrid Larsen", role: "Head of Sales", company: "Northwind Trade",
     status: "closed", temperature: "warm", intentScore: 95,
     lastInteractionAt: iso(-4320),
+    currentChannel: "email",
+    availableChannels: ["email"],
   }),
   make({
     id: "l10", projectId: "p1", name: "Rafael Ortiz", role: "Director of Ops", company: "Pinecrest Labs",
     status: "new", temperature: "cold", intentScore: 42,
     lastInteractionAt: iso(-30),
+    currentChannel: "chat",
+    availableChannels: ["chat", "email"],
   }),
   make({
     id: "l11", projectId: "p1", name: "Yuki Tanaka", role: "Founder", company: "Lumen Studio",
     status: "contacted", temperature: "warm", intentScore: 58,
     lastInteractionAt: iso(-2200),
+    currentChannel: "linkedin",
+    availableChannels: ["linkedin", "email"],
   }),
   make({
     id: "l12", projectId: "p2", name: "Margaret Holbrook", role: "SVP Procurement", company: "Brightline Industries",
     status: "qualified", temperature: "hot", intentScore: 84, budget: "$250k+ ARR",
     lastInteractionAt: iso(-150),
+    currentChannel: "phone",
+    availableChannels: ["phone", "email"],
     meetings: [
       { id: "mt5", leadId: "l12", customerName: "Margaret Holbrook", company: "Brightline Industries", type: "demo", start: isoDay(2, 15, 0), durationMin: 60 },
     ],
@@ -227,6 +268,8 @@ export const leads: Lead[] = [
     id: "l13", projectId: "p3", name: "Chris Bell", role: "Sales Manager", company: "Tidewater Co.",
     status: "responded", temperature: "hot", intentScore: 78,
     lastInteractionAt: iso(-50),
+    currentChannel: "chat",
+    availableChannels: ["chat", "email", "sms"],
   }),
 ];
 
