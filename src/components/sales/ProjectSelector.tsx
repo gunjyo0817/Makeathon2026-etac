@@ -1,6 +1,6 @@
 import { projects } from "@/data/mock";
 import { ChevronDown, Check, FolderKanban } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function ProjectSelector({
@@ -11,10 +11,33 @@ export function ProjectSelector({
   onSelect: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [alignEnd, setAlignEnd] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const selected = projects.find((p) => p.id === selectedId) ?? projects[0];
 
+  useEffect(() => {
+    if (!open) return;
+
+    const updateDropdownAlignment = () => {
+      const rect = rootRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const menuWidth = 320; // w-80
+      const viewportWidth = window.innerWidth;
+      const spaceOnRight = viewportWidth - rect.left;
+      const spaceOnLeft = rect.right;
+
+      // If opening to the right would overflow, anchor to the right edge.
+      setAlignEnd(spaceOnRight < menuWidth && spaceOnLeft > spaceOnRight);
+    };
+
+    updateDropdownAlignment();
+    window.addEventListener("resize", updateDropdownAlignment);
+    return () => window.removeEventListener("resize", updateDropdownAlignment);
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div ref={rootRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-3 bg-card border border-border rounded-2xl px-4 py-2.5 shadow-soft hover:border-primary/40 transition-colors"
@@ -32,7 +55,12 @@ export function ProjectSelector({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 mt-2 w-80 bg-popover border border-border rounded-2xl shadow-card p-2 animate-fade-in">
+          <div
+            className={cn(
+              "absolute z-20 mt-2 w-80 bg-popover border border-border rounded-2xl shadow-card p-2 animate-fade-in",
+              alignEnd ? "right-0" : "left-0"
+            )}
+          >
             {projects.map((p) => (
               <button
                 key={p.id}
