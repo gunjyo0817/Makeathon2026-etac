@@ -1,16 +1,30 @@
-import { products } from "@/data/mock";
+import { products as mockProducts } from "@/data/mock";
 import { ChevronDown, Check, FolderKanban } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+
+type SelectorProduct = {
+  id: string;
+  name: string;
+  description?: string;
+  leadCount?: number;
+};
 
 export function ProductSelector({
   selectedId,
   onSelect,
   includeAll = false,
+  products = mockProducts.map((product) => ({
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    leadCount: product.leadCount,
+  })),
 }: {
   selectedId: string;
   onSelect: (id: string) => void;
   includeAll?: boolean;
+  products?: SelectorProduct[];
 }) {
   const [open, setOpen] = useState(false);
   const [alignEnd, setAlignEnd] = useState(false);
