@@ -31,7 +31,7 @@ export function LeadHeader({ lead }: { lead: Lead }) {
           </div>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold bg-muted text-muted-foreground rounded-full px-2.5 py-1">
             <span className="size-1.5 rounded-full bg-primary" />
-            Project: {project?.name}
+            Product: {project?.name}
           </div>
         </div>
       </div>

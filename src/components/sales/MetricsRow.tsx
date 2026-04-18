@@ -30,12 +30,12 @@ export function MetricsRow({ projectId }: { projectId: string }) {
 
   const items = [
     {
-      label: "Active Leads",
+      label: "Active Buyers",
       value: activeLeads.length,
       delta: `${Math.min(activeLeads.length, 6)} touched today`,
       deltaTone: "success" as const,
       icon: Users,
-      detailTitle: "Active Leads",
+      detailTitle: "Active Buyers",
       content: (
         <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {activeLeads.slice(0, 8).map((lead) => (
@@ -52,12 +52,12 @@ export function MetricsRow({ projectId }: { projectId: string }) {
       ),
     },
     {
-      label: "Qualified Leads",
+      label: "Qualified Buyers",
       value: qualifiedLeads.length,
-      delta: `${qualifiedLeads.length} in pipeline`,
+      delta: `${qualifiedLeads.length} in consideration`,
       deltaTone: "success" as const,
       icon: CheckCircle2,
-      detailTitle: "Qualified Leads",
+      detailTitle: "Qualified Buyers",
       content: (
         <ul className="mt-2 divide-y divide-border border border-border rounded-xl overflow-hidden">
           {qualifiedLeads.slice(0, 8).map((lead) => (
@@ -66,7 +66,7 @@ export function MetricsRow({ projectId }: { projectId: string }) {
                 onClick={() => navigate(`/leads/${lead.id}`)}
                 className="w-full text-left text-xs text-muted-foreground px-3 py-2.5 hover:bg-muted transition-colors"
               >
-                {lead.name} - intent {lead.intentScore}
+                {lead.name} - interest {lead.intentScore}
               </button>
             </li>
           ))}

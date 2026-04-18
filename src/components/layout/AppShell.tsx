@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/leads", label: "Leads", icon: Users },
+  { to: "/projects", label: "Products", icon: FolderKanban },
+  { to: "/leads", label: "Buyers", icon: Users },
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/meetings", label: "Meetings", icon: Calendar },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -35,7 +35,7 @@ function Sidebar() {
         </div>
         <div>
           <div className="font-bold tracking-tight text-lg leading-none">Etac</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Sales Control</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Product Sales</div>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ function Topbar() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search leads, companies, projects…"
+          placeholder="Search buyers, companies, products…"
           className="w-full h-10 pl-9 pr-4 rounded-full bg-card border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all"
         />
       </div>

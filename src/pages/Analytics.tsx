@@ -4,9 +4,9 @@ import { TrendingUp, TrendingDown, Users, MessageSquare, CalendarCheck, Target }
 import { cn } from "@/lib/utils";
 
 const kpis = [
-  { label: "Pipeline Value", value: "$1.84M", delta: "+12.4%", up: true, icon: Target },
-  { label: "Replies (7d)", value: "248", delta: "+18.2%", up: true, icon: MessageSquare },
-  { label: "Booked Meetings", value: metrics.scheduledMeetings, delta: "+3", up: true, icon: CalendarCheck },
+  { label: "Quoted Value", value: "$1.84M", delta: "+12.4%", up: true, icon: Target },
+  { label: "Buyer Replies (7d)", value: "248", delta: "+18.2%", up: true, icon: MessageSquare },
+  { label: "Booked Visits", value: metrics.scheduledMeetings, delta: "+3", up: true, icon: CalendarCheck },
   { label: "Avg. Response Time", value: "2.4h", delta: "-22%", up: true, icon: Users },
 ];
 
@@ -30,7 +30,7 @@ export default function Analytics() {
         <header>
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            Performance of Etac agents across all active campaigns. Last 7 days.
+            Performance of Etac assistants across active furniture products. Last 7 days.
           </p>
         </header>
 
@@ -56,8 +56,8 @@ export default function Analytics() {
           <div className="bg-card border border-border rounded-3xl shadow-card p-6">
             <div className="flex items-baseline justify-between mb-6">
               <div>
-                <div className="text-sm font-bold">Outbound Activity</div>
-                <div className="text-[11px] text-muted-foreground mt-1">Messages sent vs. replies received</div>
+                <div className="text-sm font-bold">Buyer Outreach Activity</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Messages sent vs. buyer replies received</div>
               </div>
               <div className="flex items-center gap-4 text-[11px] font-semibold">
                 <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary/40" /> Sent</span>
@@ -80,8 +80,8 @@ export default function Analytics() {
 
           <div className="bg-card border border-border rounded-3xl shadow-card p-6 flex flex-col">
             <div className="mb-5">
-              <div className="text-sm font-bold">Pipeline Distribution</div>
-              <div className="text-[11px] text-muted-foreground mt-1">Where your {total} leads are right now</div>
+              <div className="text-sm font-bold">Buyer Stage Distribution</div>
+              <div className="text-[11px] text-muted-foreground mt-1">Where your {total} buyer records are right now</div>
             </div>
             <div className="flex flex-col gap-4 flex-1">
               {STATUS_COLUMNS.map((s, i) => {
@@ -107,23 +107,23 @@ export default function Analytics() {
         </div>
 
         <div className="bg-card border border-border rounded-3xl shadow-card p-6">
-          <div className="text-sm font-bold mb-5">Top Performing Campaigns</div>
+          <div className="text-sm font-bold mb-5">Top Performing Products</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border">
-                  <th className="text-left font-semibold py-3">Campaign</th>
+                  <th className="text-left font-semibold py-3">Product</th>
                   <th className="text-right font-semibold py-3">Sent</th>
                   <th className="text-right font-semibold py-3">Reply Rate</th>
-                  <th className="text-right font-semibold py-3">Meetings</th>
-                  <th className="text-right font-semibold py-3">Pipeline</th>
+                  <th className="text-right font-semibold py-3">Visits</th>
+                  <th className="text-right font-semibold py-3">Quoted Value</th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { name: "AI SDR for SaaS", sent: 412, reply: 28, meetings: 9, value: "$642k" },
-                  { name: "Enterprise Outreach", sent: 184, reply: 19, meetings: 4, value: "$890k" },
-                  { name: "Inbound Demo Requests", sent: 98, reply: 64, meetings: 6, value: "$312k" },
+                  { name: "Linden Lounge Chair", sent: 412, reply: 28, meetings: 9, value: "$642k" },
+                  { name: "Alder Dining Table", sent: 184, reply: 19, meetings: 4, value: "$890k" },
+                  { name: "Harbor Modular Sofa", sent: 98, reply: 64, meetings: 6, value: "$312k" },
                 ].map((r) => (
                   <tr key={r.name} className="border-b border-border last:border-0 hover:bg-muted/60 transition-colors">
                     <td className="py-3.5 font-semibold">{r.name}</td>

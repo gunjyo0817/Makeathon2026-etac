@@ -59,7 +59,7 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
             </div>
           </div>
           <div className="text-[11px] text-muted-foreground">
-            {PRIMARY_CHANNELS.length} channels available for this lead
+            {PRIMARY_CHANNELS.length} channels available for this buyer
           </div>
         </div>
 
@@ -135,7 +135,7 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
       <div className="border-t border-border p-3 bg-muted/40">
         <div className="flex items-center gap-2 bg-card rounded-full border border-border px-4 py-2 text-xs text-muted-foreground">
           <Sparkles className="size-3.5 text-primary" />
-          Etac AI is monitoring {lead.name}'s {isSplitView ? "multi-channel" : currentChannel.label.toLowerCase()} conversation and will reply automatically.
+          Etac AI is monitoring {lead.name}'s {isSplitView ? "multi-channel" : currentChannel.label.toLowerCase()} conversation and can continue the follow-up automatically.
         </div>
       </div>
     </div>
@@ -190,7 +190,7 @@ function EmptyState({ message }: { message: string }) {
     <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-5 py-8 text-center">
       <div className="text-sm font-semibold">{message}</div>
       <div className="text-xs text-muted-foreground mt-1">
-        Etac can switch into this channel when the lead responds there.
+        Etac can switch into this channel when the buyer responds there.
       </div>
     </div>
   );

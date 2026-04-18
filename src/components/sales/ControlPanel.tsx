@@ -13,7 +13,7 @@ export function ControlPanel({ initialPaused }: { initialPaused: boolean }) {
         </div>
         <div>
           <div className="text-sm font-bold leading-none">Control Panel</div>
-          <div className="text-[11px] text-muted-foreground mt-1">Override or supervise Etac's actions</div>
+          <div className="text-[11px] text-muted-foreground mt-1">Override or supervise Etac's buyer-facing actions</div>
         </div>
       </div>
 
@@ -26,7 +26,7 @@ export function ControlPanel({ initialPaused }: { initialPaused: boolean }) {
         >
           <div className={cn("size-2.5 rounded-full animate-pulse-soft", paused ? "bg-warning" : "bg-success")} />
           <div className="text-xs font-semibold flex-1">
-            {paused ? "Agent paused — no automated actions will run." : "Agent active — managing this lead autonomously."}
+            {paused ? "Assistant paused — no automated actions will run." : "Assistant active — managing this buyer conversation autonomously."}
           </div>
         </div>
 
@@ -35,7 +35,7 @@ export function ControlPanel({ initialPaused }: { initialPaused: boolean }) {
             onClick={() => setPaused((v) => !v)}
             className="bg-muted hover:bg-secondary border border-border rounded-2xl px-3 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
           >
-            {paused ? <><Play className="size-3.5" /> Resume Agent</> : <><Pause className="size-3.5" /> Pause Agent</>}
+            {paused ? <><Play className="size-3.5" /> Resume Assistant</> : <><Pause className="size-3.5" /> Pause Assistant</>}
           </button>
           <button className="bg-foreground text-background hover:bg-foreground/90 rounded-2xl px-3 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-colors">
             <UserCheck className="size-3.5" />

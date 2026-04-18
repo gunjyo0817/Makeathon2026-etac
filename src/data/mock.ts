@@ -12,9 +12,12 @@ export type Channel = "email" | "sms" | "phone";
 
 export interface Project {
   id: string;
+  createdAt: string;
   name: string;
   description: string;
   objective: string;
+  price: number;
+  texture: string;
   leadCount: number;
   color: string; // tailwind text-color token
 }
@@ -125,25 +128,34 @@ export const STATUS_COLUMNS: { id: LeadStatus; label: string }[] = [
 export const projects: Project[] = [
   {
     id: "p1",
-    name: "AI SDR for SaaS",
-    description: "Outbound to mid-market B2B SaaS",
-    objective: "Generate qualified pipeline from mid-market SaaS accounts and convert replies into booked demos.",
+    createdAt: "2026-01-12T09:30:00.000Z",
+    name: "Linden Lounge Chair",
+    description: "Low-slung accent chair with rounded arms and deep cushioning.",
+    objective: "Designed for boutique hotel lounges, reading corners, and warm residential interiors.",
+    price: 1299,
+    texture: "Boucle fabric",
     leadCount: 18,
     color: "text-primary",
   },
   {
     id: "p2",
-    name: "Enterprise Outreach",
-    description: "Fortune 1000 strategic accounts",
-    objective: "Open high-value enterprise conversations with strategic accounts and progress them to stakeholder meetings.",
+    createdAt: "2026-02-03T14:15:00.000Z",
+    name: "Alder Dining Table",
+    description: "Solid oak dining table with softened edges and a quiet architectural base.",
+    objective: "Built for family dining rooms, hospitality suites, and refined shared spaces.",
+    price: 2490,
+    texture: "Natural oak grain",
     leadCount: 9,
     color: "text-info",
   },
   {
     id: "p3",
-    name: "Inbound Demo Requests",
-    description: "Website demo form responses",
-    objective: "Qualify inbound demo requests quickly and route strong-fit prospects into fast booking flows.",
+    createdAt: "2026-02-25T11:45:00.000Z",
+    name: "Harbor Modular Sofa",
+    description: "Flexible sectional sofa system with generous proportions and soft lines.",
+    objective: "Intended for premium living rooms, lobbies, and open-plan gathering spaces.",
+    price: 3890,
+    texture: "Stonewashed linen blend",
     leadCount: 12,
     color: "text-success",
   },
