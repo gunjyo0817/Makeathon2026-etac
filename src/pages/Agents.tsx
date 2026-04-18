@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProductSelector } from "@/components/sales/ProductSelector";
-import { agents, getAgentByProductId, productAgentConfigs, products } from "@/data/mock";
+import { agents, getAgentByProductId, products } from "@/data/mock";
 import { Bot, Pause, Play, Settings2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
@@ -18,13 +18,11 @@ import {
 
 export default function Agents() {
   const [searchParams] = useSearchParams();
-  const [productId, setProductId] = useState(products[0].id);
+  const [productId, setProductId] = useState("all");
   const [statuses, setStatuses] = useState<Record<string, "active" | "paused">>(() =>
     Object.fromEntries(agents.map((agent) => [agent.id, agent.status]))
   );
   const [agentOverrides, setAgentOverrides] = useState<Record<string, (typeof agents)[number]>>({});
-  const [configOverrides, setConfigOverrides] = useState(productAgentConfigs);
-
   useEffect(() => {
     const productIdFromQuery = searchParams.get("productId");
     if (productIdFromQuery && products.some((product) => product.id === productIdFromQuery)) {
@@ -32,9 +30,9 @@ export default function Agents() {
     }
   }, [searchParams]);
 
-  const baseAgent = getAgentByProductId(productId);
-  const agent = baseAgent ? agentOverrides[baseAgent.id] ?? baseAgent : undefined;
-  const config = configOverrides[productId];
+  const visibleAgents = productId === "all"
+    ? agents.map((a) => agentOverrides[a.id] ?? a)
+    : (() => { const b = getAgentByProductId(productId); return b ? [agentOverrides[b.id] ?? b] : []; })();
 
   const toggleStatus = (agentId: string) => {
     setStatuses((prev) => ({
@@ -51,49 +49,21 @@ export default function Agents() {
             <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
             <p className="text-muted-foreground mt-2 text-sm">Each product can have a dedicated assistant for lead outreach, quoting, and follow-up.</p>
           </div>
-          <ProductSelector selectedId={productId} onSelect={setProductId} />
+          <ProductSelector selectedId={productId} onSelect={setProductId} includeAll />
         </header>
 
-        <div className="bg-card border border-border rounded-3xl p-5">
-          <div className="flex items-center justify-end mb-3">
-            <ConfigureProductContextDialog
-              persona={config?.persona ?? ""}
-              dataKnowledge={config?.dataKnowledge ?? ""}
-              onSave={(next) =>
-                setConfigOverrides((prev) => ({
-                  ...prev,
-                  [productId]: {
-                    ...(prev[productId] ?? productAgentConfigs[productId]),
-                    persona: next.persona,
-                    dataKnowledge: next.dataKnowledge,
-                  },
-                }))
-              }
-            />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Product Voice</div>
-              <div className="text-sm mt-1.5 leading-relaxed">{config?.persona}</div>
-            </div>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Product Knowledge</div>
-              <div className="text-sm mt-1.5 leading-relaxed">{config?.dataKnowledge}</div>
-            </div>
-          </div>
-        </div>
 
-        {!agent ? (
+        {visibleAgents.length === 0 ? (
           <div className="bg-card border border-border rounded-3xl p-10 text-center text-sm text-muted-foreground">
             No assistant is configured for this product yet.
           </div>
         ) : (
-          <article className="bg-card border border-border rounded-3xl p-5 shadow-card flex flex-col gap-4">
-            {(() => {
+          <div className="flex flex-col gap-4">
+            {visibleAgents.map((agent) => {
               const status = statuses[agent.id] ?? agent.status;
               const isActive = status === "active";
               return (
-                <>
+                <article key={agent.id} className="bg-card border border-border rounded-3xl p-5 shadow-card flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
                       <div className="size-11 rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold text-sm">{agent.initials}</div>
@@ -116,19 +86,10 @@ export default function Agents() {
                     <Bot className="size-5 text-muted-foreground" />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <Stat label="Conversations" value={agent.conversations.toLocaleString()} />
-                    <Stat label="Meetings" value={agent.meetings.toLocaleString()} emphasis />
-                    <Stat label="Qual Rate" value={`${agent.qualRate}%`} />
-                  </div>
-
                   <div className="space-y-2 text-sm">
                     <Row label="Channels" value={agent.channels.join(", ")} />
                     <Row label="Voice" value={agent.voice} />
                     <Row label="Personality" value={agent.personality} italic />
-                    <Row label="HappyRobot API" value={agent.happyRobot.apiBaseUrl} />
-                    <Row label="Agent Ref" value={agent.happyRobot.agentRef} />
-                    <Row label="Phone Calls" value={agent.happyRobot.phoneEnabled ? "Enabled" : "Disabled"} />
                   </div>
 
                   <div className="flex items-center gap-2 pt-2">
@@ -156,10 +117,10 @@ export default function Agents() {
                       Train
                     </button>
                   </div>
-                </>
+                </article>
               );
-            })()}
-          </article>
+            })}
+          </div>
         )}
       </div>
     </AppShell>
@@ -195,27 +156,16 @@ function ConfigureAgentDialog({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Agent name">
-            <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+            <Input value={agent.name} disabled />
           </Field>
           <Field label="Role">
-            <Input value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })} />
+            <Input value={agent.role} disabled />
           </Field>
           <Field label="Voice">
             <Input value={draft.voice} onChange={(e) => setDraft({ ...draft, voice: e.target.value })} />
           </Field>
-          <Field label="Channels (comma-separated)">
-            <Input
-              value={draft.channels.join(", ")}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  channels: e.target.value
-                    .split(",")
-                    .map((v) => v.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
+          <Field label="Channels">
+            <Input value={agent.channels.join(", ")} disabled />
           </Field>
         </div>
 
@@ -227,46 +177,6 @@ function ConfigureAgentDialog({
             className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
           />
         </Field>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Happy Robot API base URL">
-            <Input
-              value={draft.happyRobot.apiBaseUrl}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  happyRobot: { ...draft.happyRobot, apiBaseUrl: e.target.value },
-                })
-              }
-            />
-          </Field>
-          <Field label="Happy Robot agent ref">
-            <Input
-              value={draft.happyRobot.agentRef}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  happyRobot: { ...draft.happyRobot, agentRef: e.target.value },
-                })
-              }
-            />
-          </Field>
-        </div>
-
-        <button
-          onClick={() =>
-            setDraft({
-              ...draft,
-              happyRobot: { ...draft.happyRobot, phoneEnabled: !draft.happyRobot.phoneEnabled },
-            })
-          }
-          className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/60 transition-colors text-sm"
-        >
-          <span className="font-medium">Enable phone calls via Happy Robot</span>
-          <span className={cn("text-xs font-semibold", draft.happyRobot.phoneEnabled ? "text-success" : "text-muted-foreground")}>
-            {draft.happyRobot.phoneEnabled ? "Enabled" : "Disabled"}
-          </span>
-        </button>
 
         <DialogFooter>
           <DialogClose asChild>
@@ -286,79 +196,7 @@ function ConfigureAgentDialog({
   );
 }
 
-function ConfigureProductContextDialog({
-  persona,
-  dataKnowledge,
-  onSave,
-}: {
-  persona: string;
-  dataKnowledge: string;
-  onSave: (payload: { persona: string; dataKnowledge: string }) => void;
-}) {
-  const [draft, setDraft] = useState({ persona, dataKnowledge });
 
-  return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (open) setDraft({ persona, dataKnowledge });
-      }}
-    >
-      <DialogTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border border-border hover:bg-muted transition-colors">
-          <Settings2 className="size-3.5" />
-          Edit
-        </button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl rounded-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit Product Assistant Context</DialogTitle>
-          <DialogDescription>Product-level instructions used by the assigned assistant.</DialogDescription>
-        </DialogHeader>
-
-        <Field label="Product voice">
-          <textarea
-            rows={5}
-            value={draft.persona}
-            onChange={(e) => setDraft((prev) => ({ ...prev, persona: e.target.value }))}
-            className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-          />
-        </Field>
-
-        <Field label="Knowledge context">
-          <textarea
-            rows={5}
-            value={draft.dataKnowledge}
-            onChange={(e) => setDraft((prev) => ({ ...prev, dataKnowledge: e.target.value }))}
-            className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-          />
-        </Field>
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <button className="px-4 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors">Cancel</button>
-          </DialogClose>
-          <DialogClose asChild>
-            <button
-              onClick={() => onSave(draft)}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              Save context
-            </button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function Stat({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
-  return (
-    <div className={cn("rounded-2xl border border-border p-3", emphasis && "bg-destructive/5 border-destructive/20")}>
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{label}</div>
-      <div className="text-2xl leading-none font-bold tabular-nums mt-2">{value}</div>
-    </div>
-  );
-}
 
 function Row({ label, value, italic = false }: { label: string; value: string; italic?: boolean }) {
   return (
