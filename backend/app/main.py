@@ -17,6 +17,7 @@ from .booking_service import (
 from .config import settings
 from .happyrobot_client import HappyRobotClient
 from .schemas import (
+    FollowUpCallRequest,
     LeadCreate,
     ProductCreate,
     TableRowCreate,
@@ -504,3 +505,17 @@ async def booking_confirm(token: str, body: ConfirmBookingBody) -> dict[str, Any
         "booking_url": booking_url,
         **notify,
     }
+@app.post("/api/follow-up/call")
+async def trigger_follow_up_call(payload: FollowUpCallRequest) -> Any:
+    customer_id = payload.customer_id.strip()
+    if not customer_id:
+        raise HTTPException(status_code=400, detail="customer_id is required")
+    try:
+        result = await client.trigger_phone_call(customer_id)
+        return {
+            "ok": True,
+            "customerId": customer_id,
+            "result": result,
+        }
+    except Exception as exc:
+        raise _to_http_error(exc) from exc

@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     )
     happyrobot_api_key: str = Field(default="")
     happyrobot_timeout_seconds: float = Field(default=20.0)
+    happyrobot_phone_call_webhook_url: str = Field(
+        default="https://workflows.platform.eu.happyrobot.ai/hooks/development/efwz3e8csw3l"
+    )
     # Comma-separated browser origins, or "*" for any (credentials off — fine for this API).
     cors_origins: str = Field(default="*")
     # Lead booking (Gmail / HappyRobot): public SPA origin for links in outbound payloads.

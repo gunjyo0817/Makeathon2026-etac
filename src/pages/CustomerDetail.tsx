@@ -13,12 +13,17 @@ import {
   getLeads,
   getProducts,
   getTranscriptsForCustomer,
+  triggerFollowUpPhoneCall,
   type LatestConversationAssignment,
   type LeadRow,
   type ProductRow,
 } from "@/lib/api";
 import { mapLeadRowToLead } from "@/lib/mapLeadRowToLead";
-import { dominantChannelFromMessages, transcriptRowsToMessages } from "@/lib/parseTranscriptToMessages";
+import {
+  dominantChannelFromMessages,
+  transcriptRowsToHistoryActions,
+  transcriptRowsToMessages,
+} from "@/lib/parseTranscriptToMessages";
 
 export default function CustomerDetail() {
   const { id } = useParams();
@@ -27,6 +32,8 @@ export default function CustomerDetail() {
   const [latestAssignment, setLatestAssignment] = useState<LatestConversationAssignment | null>(null);
   const [productName, setProductName] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+  const [isTriggeringCall, setIsTriggeringCall] = useState(false);
+  const [callStatus, setCallStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,6 +46,7 @@ export default function CustomerDetail() {
       }
       setIsLoading(true);
       setError(null);
+      setCallStatus(null);
       try {
         const [leadRows, productRows, transcriptRows, assignment] = await Promise.all([
           getLeads(),
@@ -56,6 +64,7 @@ export default function CustomerDetail() {
         }
         const base = mapLeadRowToLead(row);
         const messages = transcriptRowsToMessages(transcriptRows, base.name);
+        const historyActions = transcriptRowsToHistoryActions(transcriptRows);
         const currentChannel =
           messages.length > 0 ? dominantChannelFromMessages(messages) : base.currentChannel;
         const followUpAction =
@@ -73,13 +82,14 @@ export default function CustomerDetail() {
                 scheduledFor: assignment.followUpDate,
                 priority: "medium" as const,
                 icon: "phone" as const,
+                kind: "follow_up" as const,
               }
             : null;
         setLead({
           ...base,
           messages,
           currentChannel,
-          actions: followUpAction ? [...base.actions, followUpAction] : base.actions,
+          actions: [...historyActions, ...(followUpAction ? [followUpAction] : []), ...base.actions],
         });
         const pid = row.product_id ?? row.productId;
         const assignedPid = assignment.assignedProductId;
@@ -139,6 +149,19 @@ export default function CustomerDetail() {
     );
   }
 
+  const handleFollowUpAlarmClick = async () => {
+    setIsTriggeringCall(true);
+    setCallStatus(null);
+    try {
+      await triggerFollowUpPhoneCall(routeId);
+      setCallStatus("Phone call request sent.");
+    } catch (err) {
+      setCallStatus(err instanceof Error ? err.message : "Failed to send phone call request.");
+    } finally {
+      setIsTriggeringCall(false);
+    }
+  };
+
   return (
     <AppShell>
       <div className="px-8 pb-10 pt-2 flex flex-col gap-6 max-w-[1600px] mx-auto">
@@ -146,7 +169,16 @@ export default function CustomerDetail() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
           <div className="flex flex-col gap-6 min-w-0">
             <ConversationHistory lead={lead} />
-            <AgentPlanPanel actions={lead.actions} />
+            <AgentPlanPanel
+              actions={lead.actions}
+              onFollowUpAlarmClick={handleFollowUpAlarmClick}
+              isFollowUpAlarmLoading={isTriggeringCall}
+            />
+            {callStatus ? (
+              <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+                {callStatus}
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-col gap-6">
             <ControlPanel initialPaused={lead.agentPaused} />

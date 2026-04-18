@@ -33,6 +33,24 @@ class HappyRobotClient:
                 return {}
             return response.json()
 
+    async def _request_absolute(
+        self, method: str, url: str, json: dict[str, Any] | None = None
+    ) -> Any:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.request(
+                method=method,
+                url=url,
+                headers={"Content-Type": "application/json"},
+                json=json,
+            )
+            response.raise_for_status()
+            if not response.content:
+                return {}
+            content_type = response.headers.get("content-type", "")
+            if "application/json" in content_type.lower():
+                return response.json()
+            return {"text": response.text}
+
     async def get_schema(self) -> list[dict[str, Any]]:
         return await self._request("GET", "/twin/schema")
 
@@ -68,3 +86,10 @@ class HappyRobotClient:
 
     async def execute_sql(self, sql: str) -> dict[str, Any]:
         return await self._request("POST", "/twin/sql", json={"sql": sql})
+
+    async def trigger_phone_call(self, customer_id: str) -> dict[str, Any]:
+        return await self._request_absolute(
+            "POST",
+            settings.happyrobot_phone_call_webhook_url,
+            json={"action_type": "phone_call", "customer_id": customer_id},
+        )
