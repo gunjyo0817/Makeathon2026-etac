@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { leads, projects } from "@/data/mock";
@@ -25,6 +25,7 @@ export default function Meetings() {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [anchorDate, setAnchorDate] = useState(stripTime(new Date()));
   const [showList, setShowList] = useState(false);
+  const [dragState, setDragState] = useState<{ dateKey: string; mode: "add" | "remove" } | null>(null);
   const [availabilityByProject, setAvailabilityByProject] = useState<Record<string, Record<string, string[]>>>(() =>
     Object.fromEntries(projects.map((project) => [project.id, {}]))
   );
@@ -120,6 +121,29 @@ export default function Meetings() {
     });
   };
 
+  const paintSpot = (date: Date, slot: string, mode: "add" | "remove") => {
+    const key = dateKey(date);
+    setAvailabilityByProject((prev) => {
+      const projectMap = prev[projectId] ?? {};
+      const current = new Set(projectMap[key] ?? []);
+      if (mode === "add") current.add(slot);
+      else current.delete(slot);
+      return {
+        ...prev,
+        [projectId]: {
+          ...projectMap,
+          [key]: Array.from(current).sort(),
+        },
+      };
+    });
+  };
+
+  useEffect(() => {
+    const endDrag = () => setDragState(null);
+    window.addEventListener("mouseup", endDrag);
+    return () => window.removeEventListener("mouseup", endDrag);
+  }, []);
+
   return (
     <AppShell>
       <div className="px-8 pb-10 pt-2 flex flex-col gap-7 max-w-[1700px] mx-auto">
@@ -169,6 +193,17 @@ export default function Meetings() {
                     meetingByDate={meetingByDate}
                     availability={availability}
                     onToggleSpot={toggleSpot}
+                    onCellMouseDown={(date, slot, isAvailable) => {
+                      const mode: "add" | "remove" = isAvailable ? "remove" : "add";
+                      paintSpot(date, slot, mode);
+                      setDragState({ dateKey: dateKey(date), mode });
+                    }}
+                    onCellMouseEnter={(date, slot) => {
+                      if (!dragState) return;
+                      if (dragState.dateKey !== dateKey(date)) return;
+                      paintSpot(date, slot, dragState.mode);
+                    }}
+                    onCellMouseUp={() => setDragState(null)}
                     onMeetingClick={(leadId) => navigate(`/leads/${leadId}`)}
                     editable
                   />
@@ -268,6 +303,9 @@ function TimeGrid({
   meetingByDate,
   availability,
   onToggleSpot,
+  onCellMouseDown,
+  onCellMouseEnter,
+  onCellMouseUp,
   onMeetingClick,
   editable,
 }: {
@@ -276,6 +314,9 @@ function TimeGrid({
   meetingByDate: Map<string, any[]>;
   availability: Record<string, string[]>;
   onToggleSpot: (date: Date, slot: string) => void;
+  onCellMouseDown?: (date: Date, slot: string, isAvailable: boolean) => void;
+  onCellMouseEnter?: (date: Date, slot: string) => void;
+  onCellMouseUp?: () => void;
   onMeetingClick: (leadId: string) => void;
   editable: boolean;
 }) {
@@ -326,6 +367,19 @@ function TimeGrid({
                 <div
                   key={`${dKey}_${slot}`}
                   onClick={() => editable && onToggleSpot(date, slot)}
+                  onMouseDown={(e) => {
+                    if (!editable) return;
+                    e.preventDefault();
+                    onCellMouseDown?.(date, slot, isAvailable);
+                  }}
+                  onMouseEnter={() => {
+                    if (!editable) return;
+                    onCellMouseEnter?.(date, slot);
+                  }}
+                  onMouseUp={() => {
+                    if (!editable) return;
+                    onCellMouseUp?.();
+                  }}
                   className={cn(
                     "relative border-r border-b border-border min-h-[34px] px-1 text-left transition-colors",
                     isAvailable ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-muted/50",
