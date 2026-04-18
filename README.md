@@ -18,6 +18,7 @@ Core goals:
 
 - Product management powered by `etac_products`
 - Lead management powered by `etac_leads`
+- Lead conversation transcripts from `etac_transcript` (parsed in the UI)
 - Backend proxy for HappyRobot Twin schema/table/sql APIs
 - Typed FastAPI endpoints for safer request/response handling
 - Centralized error mapping from HappyRobot responses to clean HTTP errors
@@ -41,6 +42,7 @@ Request/data flow:
 
 - `src/` - frontend app
 - `backend/` - FastAPI backend service
+- `render.yaml` / `start.sh` - optional Render deploy (monorepo: start from repo root)
 
 ## Prerequisites
 
@@ -54,7 +56,21 @@ npm install
 npm run dev
 ```
 
-Frontend runs on `http://127.0.0.1:5173` (default Vite port unless configured).
+Default dev URL: `http://127.0.0.1:5173`.
+
+### Pointing the frontend at a backend
+
+The client uses `VITE_API_BASE_URL` (see `src/lib/api.ts`). By default it falls back to `http://127.0.0.1:8000`.
+
+At the **repository root** (next to `package.json`), create `.env.local`:
+
+```env
+VITE_API_BASE_URL=https://your-backend.example.com
+```
+
+No trailing slash. Restart `npm run dev` after changing env files.
+
+For production hosting (Vercel, Netlify, etc.), set the same variable in the host’s environment settings and rebuild.
 
 ## Backend Setup
 
@@ -72,11 +88,24 @@ Set your API key in `backend/.env`:
 HAPPYROBOT_API_KEY=sk_live_xxx
 ```
 
-Run backend:
+Run backend (from `backend/`):
 
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
+
+## Deploy backend on Render
+
+This repo is a **monorepo** (`backend/` is not the git root). Options:
+
+1. **Blueprint:** use `render.yaml` at the repo root (`buildCommand` installs `backend/requirements.txt`, `startCommand` runs `start.sh` which `cd`s into `backend/` before `uvicorn`).
+2. **Manual service:** set **Build** to `pip install -r backend/requirements.txt`, **Start** to `bash start.sh`, and leave **Root Directory** empty (or the repo root).
+
+Set secrets in Render: `HAPPYROBOT_API_KEY`, and optionally `HAPPYROBOT_BASE_URL` for the EU platform.
+
+### CORS
+
+If the frontend is on another origin, add that origin in `backend/app/main.py` (`CORSMiddleware`) and redeploy the API.
 
 ## Backend API
 
@@ -91,6 +120,7 @@ uvicorn app.main:app --reload --port 8000
 - `POST /api/products`
 - `GET /api/leads`
 - `POST /api/leads`
+- `GET /api/transcripts?customer_id=` — transcript rows for a lead (`customer_id` matches lead id)
 
 ## Quick Test
 
