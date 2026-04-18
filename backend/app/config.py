@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     )
     happyrobot_api_key: str = Field(default="")
     happyrobot_timeout_seconds: float = Field(default=20.0)
+    # Comma-separated browser origins, or "*" for any (credentials off — fine for this API).
+    cors_origins: str = Field(default="*")
 
 
 settings = Settings()

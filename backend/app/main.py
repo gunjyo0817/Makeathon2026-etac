@@ -17,19 +17,32 @@ from .schemas import (
 app = FastAPI(title=settings.app_name)
 client = HappyRobotClient()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-        "http://127.0.0.1:8080",
-        "http://localhost:8080",
-    ],
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+_DEV_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:8080",
+    "http://localhost:8080",
+]
+_cors = settings.cors_origins.strip()
+if _cors == "*":
+    # Any SPA origin; browser does not send cookies to this API by default.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    _extra = [x.strip() for x in _cors.split(",") if x.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(dict.fromkeys(_DEV_ORIGINS + _extra)),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    )
 
 
 def _to_http_error(exc: Exception) -> HTTPException:
@@ -44,6 +57,11 @@ def _to_http_error(exc: Exception) -> HTTPException:
     if isinstance(exc, httpx.RequestError):
         return HTTPException(status_code=502, detail=str(exc))
     return HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {"service": settings.app_name, "health": "/health", "docs": "/docs"}
 
 
 @app.get("/health")
