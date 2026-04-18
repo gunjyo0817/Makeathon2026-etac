@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { User, Bell, Bot, Plug, Shield, CreditCard, ChevronRight, Check } from "lucide-react";
+import { User, Bell, Plug, Shield, CreditCard, ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sections = [
   { id: "profile", label: "Profile", icon: User },
-  { id: "agent", label: "AI Agent", icon: Bot },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "integrations", label: "Integrations", icon: Plug },
   { id: "security", label: "Security", icon: Shield },
@@ -43,7 +42,6 @@ export default function Settings() {
 
           <div className="bg-card border border-border rounded-3xl shadow-card p-7 flex flex-col gap-7">
             {active === "profile" && <ProfileSection />}
-            {active === "agent" && <AgentSection />}
             {active === "notifications" && <NotificationsSection />}
             {active === "integrations" && <IntegrationsSection />}
             {active === "security" && <PlaceholderSection title="Security" desc="2FA, sessions, and audit logs." />}
@@ -104,37 +102,6 @@ function ProfileSection() {
       <div className="flex justify-end gap-2 pt-2">
         <button className="px-4 py-2.5 rounded-2xl text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
         <button className="px-5 py-2.5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold shadow-clay hover:opacity-90 transition-opacity">Save changes</button>
-      </div>
-    </>
-  );
-}
-
-function AgentSection() {
-  const [auto, setAuto] = useState(true);
-  const [escalate, setEscalate] = useState(true);
-  const [aggressive, setAggressive] = useState(false);
-
-  return (
-    <>
-      <SectionHeader title="AI Agent" desc="Configure how Aura engages and qualifies your leads." />
-
-      <Field label="Agent persona">
-        <textarea
-          rows={4}
-          defaultValue="You are a friendly, consultative SDR for Aura. Lead with curiosity, never push, and qualify with thoughtful questions about budget and timeline."
-          className="px-4 py-3 rounded-2xl bg-muted border border-transparent text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-card transition-all resize-none"
-        />
-      </Field>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <Field label="Daily message limit"><Input type="number" defaultValue={80} /></Field>
-        <Field label="Reply delay (minutes)"><Input type="number" defaultValue={15} /></Field>
-      </div>
-
-      <div className="flex flex-col gap-3 pt-2">
-        <Toggle label="Auto-engage new leads" desc="Aura sends the first touch within 5 minutes of a new lead being added." value={auto} onChange={setAuto} />
-        <Toggle label="Escalate to human on complex requests" desc="Hand off when customers ask security, legal, or pricing questions." value={escalate} onChange={setEscalate} />
-        <Toggle label="Aggressive follow-up cadence" desc="Increase touches from 4 to 7 over 3 weeks." value={aggressive} onChange={setAggressive} />
       </div>
     </>
   );

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FolderKanban, Users, Calendar, BarChart3, Settings, Sparkles, Search, Bell } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Users, Calendar, BarChart3, Settings, Sparkles, Search, Bell, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/leads", label: "Leads", icon: Users },
+  { to: "/agents", label: "Agents", icon: Bot },
   { to: "/meetings", label: "Meetings", icon: Calendar },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: Settings },

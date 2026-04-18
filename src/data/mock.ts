@@ -17,6 +17,38 @@ export interface Project {
   color: string; // tailwind text-color token
 }
 
+export interface ProjectAgentConfig {
+  projectId: string;
+  persona: string;
+  dataKnowledge: string;
+  dailyMessageLimit: number;
+  replyDelayMinutes: number;
+  autoEngage: boolean;
+  escalateComplex: boolean;
+  aggressiveFollowUp: boolean;
+}
+
+export interface AgentProfile {
+  id: string;
+  projectId: string;
+  name: string;
+  initials: string;
+  role: string;
+  status: "active" | "paused";
+  description: string;
+  conversations: number;
+  meetings: number;
+  qualRate: number;
+  channels: string[];
+  voice: string;
+  personality: string;
+  happyRobot: {
+    phoneEnabled: boolean;
+    apiBaseUrl: string;
+    agentRef: string;
+  };
+}
+
 export interface Message {
   id: string;
   sender: "agent" | "customer";
@@ -77,6 +109,110 @@ export const projects: Project[] = [
   { id: "p2", name: "Enterprise Outreach", description: "Fortune 1000 strategic accounts", leadCount: 9, color: "text-info" },
   { id: "p3", name: "Inbound Demo Requests", description: "Website demo form responses", leadCount: 12, color: "text-success" },
 ];
+
+export const projectAgentConfigs: Record<string, ProjectAgentConfig> = {
+  p1: {
+    projectId: "p1",
+    persona:
+      "You are an outbound SDR for SaaS. Keep the tone consultative, ask sharp qualification questions, and tailor outreach by company growth signal and role seniority.",
+    dataKnowledge:
+      "Use firmographic enrichment, recent funding/news, website messaging, and previous thread context. Prioritize pains around pipeline coverage and SDR productivity.",
+    dailyMessageLimit: 80,
+    replyDelayMinutes: 15,
+    autoEngage: true,
+    escalateComplex: true,
+    aggressiveFollowUp: false,
+  },
+  p2: {
+    projectId: "p2",
+    persona:
+      "You are an enterprise account development agent. Stay concise, executive-friendly, and de-risk conversations with credibility signals and concrete rollout plans.",
+    dataKnowledge:
+      "Use account hierarchy, procurement timeline, security requirements, and multi-stakeholder notes. Emphasize integration risk, compliance, and change management.",
+    dailyMessageLimit: 45,
+    replyDelayMinutes: 35,
+    autoEngage: false,
+    escalateComplex: true,
+    aggressiveFollowUp: false,
+  },
+  p3: {
+    projectId: "p3",
+    persona:
+      "You are an inbound qualification specialist. Respond quickly, map use case fit, and optimize for fast demo booking while staying warm and direct.",
+    dataKnowledge:
+      "Use form fields, UTM/source channel, product page history, and prior support interactions. Prioritize urgency, expected timeline, and buying intent.",
+    dailyMessageLimit: 120,
+    replyDelayMinutes: 5,
+    autoEngage: true,
+    escalateComplex: true,
+    aggressiveFollowUp: true,
+  },
+};
+
+export const agents: AgentProfile[] = [
+  {
+    id: "a1",
+    projectId: "p1",
+    name: "Aria",
+    initials: "AR",
+    role: "Outbound SDR",
+    status: "active",
+    description: "Cold outbound specialist for SaaS mid-market accounts.",
+    conversations: 1284,
+    meetings: 187,
+    qualRate: 41,
+    channels: ["Email", "SMS", "Phone"],
+    voice: "Warm female, en-US",
+    personality: "Friendly, consultative, persistent but never pushy.",
+    happyRobot: {
+      phoneEnabled: true,
+      apiBaseUrl: "https://api.happyrobot.ai/v1",
+      agentRef: "hr_saas_outbound_aria",
+    },
+  },
+  {
+    id: "a2",
+    projectId: "p2",
+    name: "Echo",
+    initials: "EC",
+    role: "Enterprise Follow-up Specialist",
+    status: "paused",
+    description: "Handles long-cycle enterprise follow-ups and stakeholder sequencing.",
+    conversations: 2104,
+    meetings: 312,
+    qualRate: 34,
+    channels: ["Email", "SMS", "Phone"],
+    voice: "Patient and polite enterprise tone",
+    personality: "Patient, helpful, and methodical around compliance-heavy deals.",
+    happyRobot: {
+      phoneEnabled: true,
+      apiBaseUrl: "https://api.happyrobot.ai/v1",
+      agentRef: "hr_enterprise_echo",
+    },
+  },
+  {
+    id: "a3",
+    projectId: "p3",
+    name: "Nova",
+    initials: "NV",
+    role: "Inbound Qualifier",
+    status: "active",
+    description: "Responds to inbound demo requests in under 30 seconds.",
+    conversations: 932,
+    meetings: 264,
+    qualRate: 58,
+    channels: ["Chat", "Email", "WhatsApp"],
+    voice: "Quick text-first response style",
+    personality: "Quick, sharp, asks great qualifying questions.",
+    happyRobot: {
+      phoneEnabled: false,
+      apiBaseUrl: "https://api.happyrobot.ai/v1",
+      agentRef: "hr_inbound_nova",
+    },
+  },
+];
+
+export const getAgentByProjectId = (projectId: string) => agents.find((agent) => agent.projectId === projectId);
 
 const now = new Date();
 const iso = (offsetMin: number) => new Date(now.getTime() + offsetMin * 60_000).toISOString();
