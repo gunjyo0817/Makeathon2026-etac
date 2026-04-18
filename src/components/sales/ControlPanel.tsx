@@ -37,8 +37,11 @@ export function ControlPanel({ initialPaused }: { initialPaused: boolean }) {
           >
             {paused ? <><Play className="size-3.5" /> Resume Assistant</> : <><Pause className="size-3.5" /> Pause Assistant</>}
           </button>
-          <button className="bg-foreground text-background hover:bg-foreground/90 rounded-2xl px-3 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-colors">
-            <UserCheck className="size-3.5" />
+          <button
+            type="button"
+            className="bg-primary text-primary-foreground hover:opacity-90 rounded-2xl px-3 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-opacity shadow-soft border border-primary/20"
+          >
+            <UserCheck className="size-3.5 shrink-0" />
             Take Over
           </button>
         </div>
