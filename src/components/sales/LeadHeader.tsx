@@ -3,9 +3,11 @@ import { StatusBadge, TemperatureBadge } from "@/components/sales/Badges";
 import { ArrowLeft, Mail, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export function LeadHeader({ lead }: { lead: Lead }) {
+export function LeadHeader({ lead, productName }: { lead: Lead; productName?: string }) {
   const navigate = useNavigate();
   const product = getProductById(lead.productId);
+  const resolvedProductName =
+    productName ?? product?.name ?? (lead.productId === "unassigned" ? "Unassigned" : undefined);
   return (
     <div className="bg-card border border-border rounded-3xl shadow-card p-6">
       <button
@@ -31,7 +33,7 @@ export function LeadHeader({ lead }: { lead: Lead }) {
           </div>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold bg-muted text-muted-foreground rounded-full px-2.5 py-1">
             <span className="size-1.5 rounded-full bg-primary" />
-            Product: {product?.name}
+            Product: {resolvedProductName ?? "—"}
           </div>
         </div>
       </div>
