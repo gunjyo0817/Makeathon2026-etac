@@ -29,3 +29,7 @@ class LeadCreate(BaseModel):
     phone: str | None = None
     company: str | None = None
     status: str = "new"
+
+
+class FollowUpCallRequest(BaseModel):
+    customer_id: str

@@ -13,6 +13,7 @@ import {
   getLeads,
   getProducts,
   getTranscriptsForCustomer,
+  triggerFollowUpPhoneCall,
   type LatestConversationAssignment,
   type LeadRow,
   type ProductRow,
@@ -31,6 +32,8 @@ export default function CustomerDetail() {
   const [latestAssignment, setLatestAssignment] = useState<LatestConversationAssignment | null>(null);
   const [productName, setProductName] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+  const [isTriggeringCall, setIsTriggeringCall] = useState(false);
+  const [callStatus, setCallStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,6 +46,7 @@ export default function CustomerDetail() {
       }
       setIsLoading(true);
       setError(null);
+      setCallStatus(null);
       try {
         const [leadRows, productRows, transcriptRows, assignment] = await Promise.all([
           getLeads(),
@@ -145,12 +149,17 @@ export default function CustomerDetail() {
     );
   }
 
-  const handleFollowUpAlarmClick = () => {
-    console.log("Follow-up alarm clicked", {
-      leadId: routeId,
-      leadName: lead.name,
-      productName,
-    });
+  const handleFollowUpAlarmClick = async () => {
+    setIsTriggeringCall(true);
+    setCallStatus(null);
+    try {
+      await triggerFollowUpPhoneCall(routeId);
+      setCallStatus("Phone call request sent.");
+    } catch (err) {
+      setCallStatus(err instanceof Error ? err.message : "Failed to send phone call request.");
+    } finally {
+      setIsTriggeringCall(false);
+    }
   };
 
   return (
@@ -160,7 +169,16 @@ export default function CustomerDetail() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
           <div className="flex flex-col gap-6 min-w-0">
             <ConversationHistory lead={lead} />
-            <AgentPlanPanel actions={lead.actions} onFollowUpAlarmClick={handleFollowUpAlarmClick} />
+            <AgentPlanPanel
+              actions={lead.actions}
+              onFollowUpAlarmClick={handleFollowUpAlarmClick}
+              isFollowUpAlarmLoading={isTriggeringCall}
+            />
+            {callStatus ? (
+              <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+                {callStatus}
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-col gap-6">
             <ControlPanel initialPaused={lead.agentPaused} />

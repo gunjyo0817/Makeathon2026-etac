@@ -7,9 +7,11 @@ import { formatDate, formatTime } from "@/lib/format";
 export function AgentPlanPanel({
   actions,
   onFollowUpAlarmClick,
+  isFollowUpAlarmLoading = false,
 }: {
   actions: AgentAction[];
   onFollowUpAlarmClick?: (action: AgentAction) => void;
+  isFollowUpAlarmLoading?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -89,8 +91,9 @@ export function AgentPlanPanel({
                           <button
                             type="button"
                             onClick={() => onFollowUpAlarmClick?.(a)}
-                            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/85 text-info shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-info/30"
-                            aria-label="Open follow-up action"
+                            disabled={isFollowUpAlarmLoading}
+                            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/85 text-info shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-info/30 disabled:cursor-not-allowed disabled:opacity-60"
+                            aria-label="Trigger follow-up phone call"
                           >
                             <AlarmClock className="size-3.5" />
                           </button>

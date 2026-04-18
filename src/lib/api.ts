@@ -133,3 +133,14 @@ export async function getLatestConversationAssignmentForLead(
     `/api/conversations/latest-assignment?lead_id=${q}`
   );
 }
+
+export async function triggerFollowUpPhoneCall(customerId: string): Promise<{
+  ok: boolean;
+  customerId: string;
+  result: unknown;
+}> {
+  return request("/api/follow-up/call", {
+    method: "POST",
+    body: JSON.stringify({ customer_id: customerId.trim() }),
+  });
+}
