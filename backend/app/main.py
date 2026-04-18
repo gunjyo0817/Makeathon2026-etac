@@ -139,3 +139,33 @@ async def create_lead(payload: LeadCreate) -> Any:
         return await client.insert_table_row("etac_leads", payload.model_dump())
     except Exception as exc:
         raise _to_http_error(exc) from exc
+
+
+@app.get("/api/transcripts")
+async def list_transcripts_for_customer(customer_id: str) -> Any:
+    """Rows from etac_transcript where customer_id matches the lead id."""
+    cid = (customer_id or "").strip()
+    if not cid:
+        raise HTTPException(status_code=400, detail="customer_id is required")
+    try:
+        data = await client.get_table_rows("etac_transcript")
+        rows = data.get("rows") or []
+
+        def row_customer_id(row: dict[str, Any]) -> str:
+            v = row.get("customer_id")
+            if v is None:
+                v = row.get("customerId")
+            return str(v) if v is not None else ""
+
+        filtered = [r for r in rows if row_customer_id(r) == cid]
+        filtered.sort(
+            key=lambda r: str(r.get("created_at") or r.get("createdAt") or "")
+        )
+        return {
+            "tableName": "etac_transcript",
+            "kind": "table",
+            "rows": filtered,
+            "total": len(filtered),
+        }
+    except Exception as exc:
+        raise _to_http_error(exc) from exc

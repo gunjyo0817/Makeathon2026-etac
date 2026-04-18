@@ -8,8 +8,9 @@ import { LeadStatusPanel } from "@/components/sales/LeadStatusPanel";
 import { AgentPlanPanel } from "@/components/sales/AgentPlanPanel";
 import { ControlPanel } from "@/components/sales/ControlPanel";
 import { UpcomingMeetings } from "@/components/sales/UpcomingMeetings";
-import { getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
+import { getLeads, getProducts, getTranscriptsForCustomer, type LeadRow, type ProductRow } from "@/lib/api";
 import { mapLeadRowToLead } from "@/lib/mapLeadRowToLead";
+import { dominantChannelFromMessages, transcriptRowsToMessages } from "@/lib/parseTranscriptToMessages";
 
 export default function CustomerDetail() {
   const { id } = useParams();
@@ -29,14 +30,22 @@ export default function CustomerDetail() {
       setIsLoading(true);
       setError(null);
       try {
-        const [leadRows, productRows] = await Promise.all([getLeads(), getProducts()]);
+        const [leadRows, productRows, transcriptRows] = await Promise.all([
+          getLeads(),
+          getProducts(),
+          getTranscriptsForCustomer(routeId),
+        ]);
         const row = leadRows.find((l) => String(l.id) === routeId);
         if (!row) {
           setLead(null);
           setProductName(undefined);
           return;
         }
-        setLead(mapLeadRowToLead(row));
+        const base = mapLeadRowToLead(row);
+        const messages = transcriptRowsToMessages(transcriptRows, base.name);
+        const currentChannel =
+          messages.length > 0 ? dominantChannelFromMessages(messages) : base.currentChannel;
+        setLead({ ...base, messages, currentChannel });
         const pid = row.product_id ?? row.productId;
         if (pid == null || pid === "") {
           setProductName("Unassigned");

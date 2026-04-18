@@ -98,3 +98,21 @@ export async function getLeads(): Promise<LeadRow[]> {
   const rows = data.rows ?? [];
   return rows.map((r) => normalizeLeadRow(r)).filter((r): r is LeadRow => r != null);
 }
+
+export type TranscriptApiRow = {
+  id?: string | number;
+  created_at?: string;
+  createdAt?: string;
+  customer_id?: string | number;
+  customerId?: string | number;
+  medium?: string;
+  transcript?: string;
+};
+
+export async function getTranscriptsForCustomer(customerId: string): Promise<TranscriptApiRow[]> {
+  const q = encodeURIComponent(customerId.trim());
+  const data = await request<TwinTableResponse<TranscriptApiRow>>(
+    `/api/transcripts?customer_id=${q}`
+  );
+  return data.rows ?? [];
+}
