@@ -134,3 +134,87 @@ export function mapTwinMeetingsToRecords(
     };
   });
 }
+
+/** 08:00–18:00 half-hour labels (same as Meetings TimeGrid). */
+export const SALES_HALF_HOUR_SLOTS: string[] = Array.from({ length: 21 }, (_, i) => {
+  const totalMinutes = 8 * 60 + i * 30;
+  const h = Math.floor(totalMinutes / 60)
+    .toString()
+    .padStart(2, "0");
+  const m = (totalMinutes % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+});
+
+export type BookingPickerCell = {
+  cellKey: string;
+  dateKey: string;
+  slotLabel: string;
+  /** Twin row id, or in-memory slot ISO string for legacy `available_slots`. */
+  pickId: string | number;
+  slotStartIso: string;
+};
+
+export function expandTwinSlotOptionsToPickerCells(
+  slots: { id: string | number; starts_at: string; ends_at?: string | null }[]
+): BookingPickerCell[] {
+  const out: BookingPickerCell[] = [];
+  for (const s of slots) {
+    const start = new Date(s.starts_at);
+    if (Number.isNaN(start.getTime())) continue;
+    const endMs = s.ends_at
+      ? new Date(String(s.ends_at)).getTime()
+      : start.getTime() + 30 * 60 * 1000;
+    if (!Number.isFinite(endMs) || endMs <= start.getTime()) continue;
+    for (let t = start.getTime(); t < endMs; t += 30 * 60 * 1000) {
+      const cellDate = new Date(t);
+      const dk = dateKeyLocal(cellDate);
+      const label = halfHourSlotLabel(cellDate);
+      out.push({
+        cellKey: `${dk}_${label}`,
+        dateKey: dk,
+        slotLabel: label,
+        pickId: s.id,
+        slotStartIso: new Date(t).toISOString(),
+      });
+    }
+  }
+  return out;
+}
+
+export function expandMemoryIsoSlotsToPickerCells(isos: string[]): BookingPickerCell[] {
+  const out: BookingPickerCell[] = [];
+  for (const raw of isos) {
+    const iso = raw.trim();
+    if (!iso) continue;
+    const start = new Date(iso);
+    if (Number.isNaN(start.getTime())) continue;
+    const dk = dateKeyLocal(start);
+    const label = halfHourSlotLabel(start);
+    out.push({
+      cellKey: `${dk}_${label}`,
+      dateKey: dk,
+      slotLabel: label,
+      pickId: iso,
+      slotStartIso: start.toISOString(),
+    });
+  }
+  return out;
+}
+
+export function visibleDatesFromPickerCells(cells: BookingPickerCell[], maxCols = 14): Date[] {
+  const keys = [...new Set(cells.map((c) => c.dateKey))].sort();
+  return keys.slice(0, maxCols).map((k) => {
+    const [y, mo, d] = k.split("-").map(Number);
+    return new Date(y, mo - 1, d, 0, 0, 0, 0);
+  });
+}
+
+export function buildPickerCellLookup(
+  cells: BookingPickerCell[]
+): Map<string, { pickId: string; slotStartIso: string }> {
+  const m = new Map<string, { pickId: string; slotStartIso: string }>();
+  for (const c of cells) {
+    m.set(c.cellKey, { pickId: String(c.pickId), slotStartIso: c.slotStartIso });
+  }
+  return m;
+}
