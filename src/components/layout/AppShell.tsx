@@ -8,7 +8,7 @@ const nav = [
   { to: "/products", label: "Products", icon: FolderKanban },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/agents", label: "Agents", icon: Bot },
-  { to: "/meetings", label: "Meetings", icon: Calendar },
+  { to: "/meetings", label: "In-person trials", icon: Calendar },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: Settings },
 ];

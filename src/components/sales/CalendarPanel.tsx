@@ -14,18 +14,18 @@ export function CalendarPanel() {
             <Calendar className="size-4" />
           </div>
           <div>
-            <div className="text-sm font-bold leading-none">Today's Calendar</div>
+            <div className="text-sm font-bold leading-none">Today’s trials</div>
             <div className="text-[11px] text-muted-foreground mt-1">
               {new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
             </div>
           </div>
         </div>
-        <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">{todaysMeetings.length} meetings</span>
+        <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">{todaysMeetings.length} trials</span>
       </div>
 
       <div className="flex flex-col divide-y divide-border">
         {todaysMeetings.length === 0 && (
-          <div className="px-5 py-8 text-center text-sm text-muted-foreground">No meetings scheduled today.</div>
+          <div className="px-5 py-8 text-center text-sm text-muted-foreground">No trials scheduled today.</div>
         )}
         {todaysMeetings.map((m, i) => (
           <button

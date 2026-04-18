@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const kpis = [
   { label: "Quoted Value", value: "$1.84M", delta: "+12.4%", up: true, icon: Target },
   { label: "Lead Replies (7d)", value: "248", delta: "+18.2%", up: true, icon: MessageSquare },
-  { label: "Booked Visits", value: metrics.scheduledMeetings, delta: "+3", up: true, icon: CalendarCheck },
+  { label: "Booked trials", value: metrics.scheduledMeetings, delta: "+3", up: true, icon: CalendarCheck },
   { label: "Avg. Response Time", value: "2.4h", delta: "-22%", up: true, icon: Users },
 ];
 
@@ -115,7 +115,7 @@ export default function Analytics() {
                   <th className="text-left font-semibold py-3">Product</th>
                   <th className="text-right font-semibold py-3">Sent</th>
                   <th className="text-right font-semibold py-3">Reply Rate</th>
-                  <th className="text-right font-semibold py-3">Visits</th>
+                  <th className="text-right font-semibold py-3">Trials</th>
                   <th className="text-right font-semibold py-3">Quoted Value</th>
                 </tr>
               </thead>

@@ -96,7 +96,7 @@ function BookingPickGrid({
                   )}
                 >
                   {isOpen ? (
-                    <span className="sr-only">Book {cellKey}</span>
+                    <span className="sr-only">Select in-person trial slot {cellKey}</span>
                   ) : null}
                 </button>
               );
@@ -133,7 +133,7 @@ const LeadBooking = () => {
       return confirmBookingSlot(safeToken, vars.selected);
     },
     onSuccess: () => {
-      toast.success("Time confirmed — check your email for next steps.");
+      toast.success("In-person trial confirmed — check your email for next steps.");
       void q.refetch();
     },
     onError: (e: Error) => toast.error(e.message || "Could not confirm"),
@@ -202,7 +202,7 @@ const LeadBooking = () => {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-muted p-4">
         <Card className="w-full max-w-lg border-primary/20 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl">You’re booked</CardTitle>
+            <CardTitle className="text-2xl">You’re booked for a trial</CardTitle>
             <CardDescription>
               Hi {display_name}
               {company ? ` · ${company}` : ""}
@@ -213,7 +213,7 @@ const LeadBooking = () => {
               <span className="text-muted-foreground">Time: </span>
               <span className="font-medium">{formatSlot(selected_slot)}</span>
             </p>
-            <p className="text-sm text-muted-foreground">Check your inbox for confirmation.</p>
+            <p className="text-sm text-muted-foreground">Check your inbox for visit details.</p>
           </CardContent>
         </Card>
       </div>
@@ -225,10 +225,10 @@ const LeadBooking = () => {
       <Card className="w-full max-w-[960px] border-primary/15 shadow-lg">
         <CardHeader>
           <p className="text-xs font-medium uppercase tracking-wider text-primary">Etac</p>
-          <CardTitle className="text-2xl">Pick a time</CardTitle>
+          <CardTitle className="text-2xl">Book an in-person trial</CardTitle>
           <CardDescription>
             Hi {display_name}
-            {company ? ` · ${company}` : ""} — same view as sales: tap a green slot, then confirm.
+            {company ? ` · ${company}` : ""} — choose a time below (same calendar as our team). Tap a green slot, then confirm.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -249,7 +249,7 @@ const LeadBooking = () => {
                   Selected: <span className="font-medium text-foreground">{formatSlot(selectedStartIso || selected)}</span>
                 </p>
               ) : (
-                <p className="text-sm text-muted-foreground">Tap a green cell to select a time.</p>
+                <p className="text-sm text-muted-foreground">Tap a green cell to pick your visit time.</p>
               )}
               <Button
                 className="w-full"
@@ -275,7 +275,7 @@ const LeadBooking = () => {
                     Confirming…
                   </>
                 ) : (
-                  "Confirm time"
+                  "Confirm trial"
                 )}
               </Button>
             </>
@@ -309,13 +309,13 @@ const LeadBooking = () => {
                     Confirming…
                   </>
                 ) : (
-                  "Confirm time"
+                  "Confirm trial"
                 )}
               </Button>
             </>
           ) : (
             <p className="text-muted-foreground">
-              No open slots yet. Your sales rep will send updated times soon.
+              No trial slots open yet. Your rep will share new times soon.
             </p>
           )}
         </CardContent>
