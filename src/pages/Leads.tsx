@@ -42,9 +42,12 @@ const ACTIVITY_OPTIONS: { id: ActivityFilter; label: string }[] = [
 export default function Leads() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryProductId = searchParams.get("productId");
+  const validQueryProductId =
+    queryProductId && products.some((product) => product.id === queryProductId) ? queryProductId : null;
   const [leadQuery, setLeadQuery] = useState("");
   const [companyQuery, setCompanyQuery] = useState("");
-  const [productId, setProductId] = useState<string>("all");
+  const [productId, setProductId] = useState<string>(validQueryProductId ?? "all");
   const [status, setStatus] = useState<LeadStatus | "all">("all");
   const [temp, setTemp] = useState<Temperature | "all">("all");
   const [intentFilter, setIntentFilter] = useState<IntentFilter>("all");
@@ -59,26 +62,25 @@ export default function Leads() {
     activityFilter !== "all";
 
   useEffect(() => {
-    const productIdFromQuery = searchParams.get("productId");
-    if (productIdFromQuery && products.some((product) => product.id === productIdFromQuery) && productIdFromQuery !== productId) {
-      setProductId(productIdFromQuery);
+    if (validQueryProductId && validQueryProductId !== productId) {
+      setProductId(validQueryProductId);
       return;
     }
 
-    if (!productIdFromQuery && productId !== "all") {
+    if (!validQueryProductId && queryProductId === null && productId !== "all") {
       setProductId("all");
     }
-  }, [productId, searchParams]);
+  }, [productId, queryProductId, validQueryProductId]);
 
   useEffect(() => {
-    const current = searchParams.get("productId") ?? "all";
+    const current = validQueryProductId ?? "all";
     if (current === productId) return;
 
     const next = new URLSearchParams(searchParams);
     if (productId === "all") next.delete("productId");
     else next.set("productId", productId);
     setSearchParams(next, { replace: true });
-  }, [productId, searchParams, setSearchParams]);
+  }, [productId, searchParams, setSearchParams, validQueryProductId]);
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {
