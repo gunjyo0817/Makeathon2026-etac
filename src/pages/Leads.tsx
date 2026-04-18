@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { leads, products, STATUS_COLUMNS, type LeadStatus, type Temperature } from "@/data/mock";
+import { STATUS_COLUMNS, type LeadStatus, type Temperature } from "@/data/mock";
 import { StatusBadge, TemperatureBadge } from "@/components/sales/Badges";
 import { timeAgo } from "@/lib/format";
 import {
@@ -13,6 +13,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Building2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
+
+type UiLead = {
+  id: string;
+  productId: string;
+  name: string;
+  role: string;
+  company: string;
+  status: LeadStatus;
+  temperature: Temperature;
+  intentScore: number;
+  lastInteractionAt: string;
+};
 
 type IntentFilter = "all" | "high" | "medium" | "low";
 type ActivityFilter = "all" | "today" | "3d" | "7d" | "30d";
@@ -42,9 +55,13 @@ const ACTIVITY_OPTIONS: { id: ActivityFilter; label: string }[] = [
 export default function Leads() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [leads, setLeads] = useState<UiLead[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const queryProductId = searchParams.get("productId");
   const validQueryProductId =
-    queryProductId && products.some((product) => product.id === queryProductId) ? queryProductId : null;
+    queryProductId && products.some((product) => String(product.id) === queryProductId) ? queryProductId : null;
   const [leadQuery, setLeadQuery] = useState("");
   const [companyQuery, setCompanyQuery] = useState("");
   const [productId, setProductId] = useState<string>(validQueryProductId ?? "all");
@@ -60,6 +77,54 @@ export default function Leads() {
     temp !== "all" ||
     intentFilter !== "all" ||
     activityFilter !== "all";
+
+  useEffect(() => {
+    const normalizeStatus = (status?: string): LeadStatus => {
+      if (!status) return "new";
+      if (["new", "contacted", "responded", "qualified", "meeting", "closed"].includes(status)) {
+        return status as LeadStatus;
+      }
+      return "new";
+    };
+
+    const normalizeTemp = (status: LeadStatus): Temperature => {
+      if (status === "qualified" || status === "meeting") return "hot";
+      if (status === "contacted" || status === "responded") return "warm";
+      return "cold";
+    };
+
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [productRows, leadRows] = await Promise.all([getProducts(), getLeads()]);
+        setProducts(productRows);
+        setLeads(
+          leadRows.map((lead: LeadRow) => {
+            const status = normalizeStatus(lead.status);
+            const createdAt = lead.updated_at ?? lead.created_at ?? new Date().toISOString();
+            return {
+              id: String(lead.id),
+              productId: String((lead as LeadRow & { product_id?: string | number }).product_id ?? "unknown"),
+              name: lead.full_name ?? "Unknown Lead",
+              role: "Prospect",
+              company: lead.company ?? "-",
+              status,
+              temperature: normalizeTemp(status),
+              intentScore: status === "qualified" || status === "meeting" ? 80 : status === "contacted" ? 60 : 40,
+              lastInteractionAt: createdAt,
+            };
+          })
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load leads");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadData();
+  }, []);
 
   useEffect(() => {
     if (validQueryProductId && validQueryProductId !== productId) {
@@ -84,7 +149,7 @@ export default function Leads() {
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {
-      const product = products.find((p) => p.id === l.productId);
+      const product = products.find((p) => String(p.id) === l.productId);
       const ageDays = (Date.now() - new Date(l.lastInteractionAt).getTime()) / 86_400_000;
 
       if (leadQuery && !`${l.name} ${l.role}`.toLowerCase().includes(leadQuery.toLowerCase())) return false;
@@ -127,6 +192,8 @@ export default function Leads() {
             </p>
           </div>
         </header>
+        {error && <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>}
+        {isLoading && <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">Loading leads...</div>}
 
         <div className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
@@ -171,10 +238,10 @@ export default function Leads() {
                     <SelectFilterHeader
                       label="Product"
                       value={productId}
-                      summary={productId === "all" ? "All" : products.find((p) => p.id === productId)?.name ?? "All"}
+                      summary={productId === "all" ? "All" : products.find((p) => String(p.id) === productId)?.name ?? "All"}
                       options={[
                         { id: "all", label: "All products" },
-                        ...products.map((product) => ({ id: product.id, label: product.name })),
+                        ...products.map((product) => ({ id: String(product.id), label: product.name })),
                       ]}
                       onValueChange={setProductId}
                     />
@@ -228,7 +295,7 @@ export default function Leads() {
               </thead>
               <tbody>
                 {filtered.map((l) => {
-                  const product = products.find((p) => p.id === l.productId);
+                  const product = products.find((p) => String(p.id) === l.productId);
                   return (
                     <tr
                       key={l.id}
