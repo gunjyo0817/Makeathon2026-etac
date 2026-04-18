@@ -30,7 +30,7 @@ export default function Analytics() {
         <header>
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            Performance of Aura agents across all active campaigns. Last 7 days.
+            Performance of Etac agents across all active campaigns. Last 7 days.
           </p>
         </header>
 

@@ -34,7 +34,7 @@ function Sidebar() {
           <Sparkles className="size-4" strokeWidth={2.5} />
         </div>
         <div>
-          <div className="font-bold tracking-tight text-lg leading-none">Aura</div>
+          <div className="font-bold tracking-tight text-lg leading-none">Etac</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Sales Control</div>
         </div>
       </div>
