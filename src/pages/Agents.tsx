@@ -2,16 +2,28 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProjectSelector } from "@/components/sales/ProjectSelector";
 import { agents, getAgentByProjectId, projectAgentConfigs, projects } from "@/data/mock";
-import { Bot, Pause, Play, Settings2, Sparkles, Phone } from "lucide-react";
+import { Bot, Pause, Play, Settings2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Agents() {
   const [projectId, setProjectId] = useState(projects[0].id);
   const [statuses, setStatuses] = useState<Record<string, "active" | "paused">>(() =>
     Object.fromEntries(agents.map((agent) => [agent.id, agent.status]))
   );
+  const [agentOverrides, setAgentOverrides] = useState<Record<string, (typeof agents)[number]>>({});
 
-  const agent = getAgentByProjectId(projectId);
+  const baseAgent = getAgentByProjectId(projectId);
+  const agent = baseAgent ? agentOverrides[baseAgent.id] ?? baseAgent : undefined;
   const config = projectAgentConfigs[projectId];
 
   const toggleStatus = (agentId: string) => {
@@ -102,15 +114,16 @@ export default function Agents() {
                       {isActive ? <Pause className="size-4" /> : <Play className="size-4" />}
                       {isActive ? "Pause" : "Activate"}
                     </button>
-                    <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border border-border hover:bg-muted transition-colors">
-                      <Settings2 className="size-4" />
-                      Configure
-                    </button>
+                    <ConfigureAgentDialog
+                      agent={agent}
+                      onSave={(updatedAgent) =>
+                        setAgentOverrides((prev) => ({
+                          ...prev,
+                          [updatedAgent.id]: updatedAgent,
+                        }))
+                      }
+                    />
                     <button className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:opacity-80 transition-opacity">
-                      <Phone className="size-4" />
-                      Test Happy Call
-                    </button>
-                    <button className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:opacity-80 transition-opacity">
                       <Sparkles className="size-4" />
                       Train
                     </button>
@@ -122,6 +135,126 @@ export default function Agents() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+function ConfigureAgentDialog({
+  agent,
+  onSave,
+}: {
+  agent: (typeof agents)[number];
+  onSave: (agent: (typeof agents)[number]) => void;
+}) {
+  const [draft, setDraft] = useState(agent);
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        if (open) setDraft(agent);
+      }}
+    >
+      <DialogTrigger asChild>
+        <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border border-border hover:bg-muted transition-colors">
+          <Settings2 className="size-4" />
+          Configure
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Configure {agent.name}</DialogTitle>
+          <DialogDescription>Project-bound agent settings. This agent handles phone-call tasks via Happy Robot.</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Agent name">
+            <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+          </Field>
+          <Field label="Role">
+            <Input value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })} />
+          </Field>
+          <Field label="Voice">
+            <Input value={draft.voice} onChange={(e) => setDraft({ ...draft, voice: e.target.value })} />
+          </Field>
+          <Field label="Channels (comma-separated)">
+            <Input
+              value={draft.channels.join(", ")}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  channels: e.target.value
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter(Boolean),
+                })
+              }
+            />
+          </Field>
+        </div>
+
+        <Field label="Personality">
+          <textarea
+            rows={3}
+            value={draft.personality}
+            onChange={(e) => setDraft({ ...draft, personality: e.target.value })}
+            className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+          />
+        </Field>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Happy Robot API base URL">
+            <Input
+              value={draft.happyRobot.apiBaseUrl}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  happyRobot: { ...draft.happyRobot, apiBaseUrl: e.target.value },
+                })
+              }
+            />
+          </Field>
+          <Field label="Happy Robot agent ref">
+            <Input
+              value={draft.happyRobot.agentRef}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  happyRobot: { ...draft.happyRobot, agentRef: e.target.value },
+                })
+              }
+            />
+          </Field>
+        </div>
+
+        <button
+          onClick={() =>
+            setDraft({
+              ...draft,
+              happyRobot: { ...draft.happyRobot, phoneEnabled: !draft.happyRobot.phoneEnabled },
+            })
+          }
+          className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/60 transition-colors text-sm"
+        >
+          <span className="font-medium">Enable phone calls via Happy Robot</span>
+          <span className={cn("text-xs font-semibold", draft.happyRobot.phoneEnabled ? "text-success" : "text-muted-foreground")}>
+            {draft.happyRobot.phoneEnabled ? "Enabled" : "Disabled"}
+          </span>
+        </button>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <button className="px-4 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors">Cancel</button>
+          </DialogClose>
+          <DialogClose asChild>
+            <button
+              onClick={() => onSave(draft)}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Save configuration
+            </button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -140,5 +273,23 @@ function Row({ label, value, italic = false }: { label: string; value: string; i
       <div className="w-24 text-[11px] uppercase tracking-widest text-muted-foreground font-semibold shrink-0 pt-0.5">{label}</div>
       <div className={cn("text-sm", italic && "italic text-muted-foreground")}>{value}</div>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className="h-10 px-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+    />
   );
 }
