@@ -6,14 +6,17 @@ import { cn } from "@/lib/utils";
 export function ProductSelector({
   selectedId,
   onSelect,
+  includeAll = false,
 }: {
   selectedId: string;
   onSelect: (id: string) => void;
+  includeAll?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [alignEnd, setAlignEnd] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const selectedProduct = products.find((p) => p.id === selectedId) ?? products[0];
+  const selectedProduct = products.find((p) => p.id === selectedId);
+  const displayName = selectedProduct ? selectedProduct.name : "All Products";
 
   useEffect(() => {
     if (!open) return;
@@ -27,7 +30,6 @@ export function ProductSelector({
       const spaceOnRight = viewportWidth - rect.left;
       const spaceOnLeft = rect.right;
 
-      // If opening to the right would overflow, anchor to the right edge.
       setAlignEnd(spaceOnRight < menuWidth && spaceOnLeft > spaceOnRight);
     };
 
@@ -46,8 +48,8 @@ export function ProductSelector({
           <FolderKanban className="size-4" />
         </div>
         <div className="text-left min-w-0">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold leading-none">Active Product</div>
-          <div className="text-sm font-semibold mt-0.5 truncate">{selectedProduct.name}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold leading-none">Product</div>
+          <div className="text-sm font-semibold mt-0.5 truncate">{displayName}</div>
         </div>
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
@@ -61,6 +63,26 @@ export function ProductSelector({
               alignEnd ? "right-0" : "left-0"
             )}
           >
+            {includeAll && (
+              <button
+                onClick={() => {
+                  onSelect("all");
+                  setOpen(false);
+                }}
+                className={cn(
+                  "w-full text-left flex items-center gap-3 p-3 rounded-xl transition-colors",
+                  selectedId === "all" ? "bg-primary-soft" : "hover:bg-muted"
+                )}
+              >
+                <div className="size-8 rounded-lg bg-card border border-border flex items-center justify-center text-primary shrink-0">
+                  <FolderKanban className="size-4" />
+                </div>
+                <div className="min-w-0 flex-1 flex items-center justify-between">
+                  <div className="text-sm font-semibold">All Products</div>
+                  {selectedId === "all" && <Check className="size-4 text-primary" />}
+                </div>
+              </button>
+            )}
             {products.map((p) => (
               <button
                 key={p.id}
