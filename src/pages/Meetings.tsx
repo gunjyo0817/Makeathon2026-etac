@@ -25,6 +25,8 @@ export default function Meetings() {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [anchorDate, setAnchorDate] = useState(stripTime(new Date()));
   const [showList, setShowList] = useState(false);
+  const [isSpotsDialogOpen, setIsSpotsDialogOpen] = useState(false);
+  const [spotsDraft, setSpotsDraft] = useState<Record<string, string[]>>({});
   const [dragState, setDragState] = useState<{ dateKey: string; mode: "add" | "remove" } | null>(null);
   const [availabilityByProject, setAvailabilityByProject] = useState<Record<string, Record<string, string[]>>>(() =>
     Object.fromEntries(projects.map((project) => [project.id, {}]))
@@ -63,6 +65,7 @@ export default function Meetings() {
   }, [allMeetings]);
 
   const availability = availabilityByProject[projectId] ?? {};
+  const hasSpotsDraftChanges = JSON.stringify(spotsDraft) !== JSON.stringify(availability);
 
   const rangeLabel = useMemo(() => {
     if (viewMode === "month") {
@@ -123,17 +126,13 @@ export default function Meetings() {
 
   const paintSpot = (date: Date, slot: string, mode: "add" | "remove") => {
     const key = dateKey(date);
-    setAvailabilityByProject((prev) => {
-      const projectMap = prev[projectId] ?? {};
-      const current = new Set(projectMap[key] ?? []);
+    setSpotsDraft((prev) => {
+      const current = new Set(prev[key] ?? []);
       if (mode === "add") current.add(slot);
       else current.delete(slot);
       return {
         ...prev,
-        [projectId]: {
-          ...projectMap,
-          [key]: Array.from(current).sort(),
-        },
+        [key]: Array.from(current).sort(),
       };
     });
   };
@@ -143,6 +142,29 @@ export default function Meetings() {
     window.addEventListener("mouseup", endDrag);
     return () => window.removeEventListener("mouseup", endDrag);
   }, []);
+
+  const openSpotsDialog = () => {
+    setSpotsDraft(JSON.parse(JSON.stringify(availability)));
+    setIsSpotsDialogOpen(true);
+  };
+
+  const closeSpotsDialog = () => {
+    if (hasSpotsDraftChanges) {
+      const discard = window.confirm("Discard unsaved available spot changes?");
+      if (!discard) return;
+    }
+    setIsSpotsDialogOpen(false);
+    setDragState(null);
+  };
+
+  const saveSpotsDialog = () => {
+    setAvailabilityByProject((prev) => ({
+      ...prev,
+      [projectId]: spotsDraft,
+    }));
+    setIsSpotsDialogOpen(false);
+    setDragState(null);
+  };
 
   return (
     <AppShell>
@@ -168,9 +190,9 @@ export default function Meetings() {
                 </button>
               ))}
             </div>
-            <Dialog>
+            <Dialog open={isSpotsDialogOpen} onOpenChange={(open) => (open ? openSpotsDialog() : closeSpotsDialog())}>
               <DialogTrigger asChild>
-                <button className="h-10 px-4 rounded-2xl border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
+                <button onClick={openSpotsDialog} className="h-10 px-4 rounded-2xl border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
                   Available spots
                 </button>
               </DialogTrigger>
@@ -178,12 +200,12 @@ export default function Meetings() {
                 <DialogHeader>
                   <DialogTitle>Available spots</DialogTitle>
                 </DialogHeader>
-                <p className="text-xs text-muted-foreground -mt-2">Click time cells to highlight/unhighlight available booking slots.</p>
+                <p className="text-xs text-muted-foreground -mt-2">Drag across time cells to paint availability. Click and drag on green slots to remove.</p>
                 {viewMode === "month" ? (
                   <MonthGrid
                     dates={visibleDates}
                     meetingByDate={meetingByDate}
-                    availability={availability}
+                    availability={spotsDraft}
                     onDayClick={(date) => setAnchorDate(date)}
                   />
                 ) : (
@@ -191,7 +213,7 @@ export default function Meetings() {
                     dates={visibleDates}
                     timeSlots={timeSlots}
                     meetingByDate={meetingByDate}
-                    availability={availability}
+                    availability={spotsDraft}
                     onToggleSpot={toggleSpot}
                     onCellMouseDown={(date, slot, isAvailable) => {
                       const mode: "add" | "remove" = isAvailable ? "remove" : "add";
@@ -208,6 +230,20 @@ export default function Meetings() {
                     editable
                   />
                 )}
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    onClick={closeSpotsDialog}
+                    className="h-10 px-4 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors"
+                  >
+                    X
+                  </button>
+                  <button
+                    onClick={saveSpotsDialog}
+                    className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Save
+                  </button>
+                </div>
               </DialogContent>
             </Dialog>
             <div className="flex items-center gap-1 bg-card border border-border rounded-2xl px-2 py-1.5 shadow-soft">
@@ -337,9 +373,9 @@ function TimeGrid({
   }, [dates, meetingByDate]);
 
   return (
-    <div className="overflow-auto">
+    <div className="overflow-auto max-h-[65vh]">
       <div
-        className="grid min-w-[900px]"
+        className="grid min-w-[680px] md:min-w-[900px]"
         style={{
           gridTemplateColumns: `70px repeat(${dates.length}, minmax(120px, 1fr))`,
         }}
@@ -356,7 +392,7 @@ function TimeGrid({
 
         {timeSlots.map((slot) => (
           <>
-            <div key={`label_${slot}`} className="border-r border-b border-border px-2 py-2 text-[11px] text-muted-foreground tabular-nums bg-background">
+            <div key={`label_${slot}`} className="border-r border-b border-border px-2 py-1.5 text-[10px] text-muted-foreground tabular-nums bg-background">
               {slot}
             </div>
             {dates.map((date) => {
@@ -366,7 +402,6 @@ function TimeGrid({
               return (
                 <div
                   key={`${dKey}_${slot}`}
-                  onClick={() => editable && onToggleSpot(date, slot)}
                   onMouseDown={(e) => {
                     if (!editable) return;
                     e.preventDefault();
@@ -381,8 +416,8 @@ function TimeGrid({
                     onCellMouseUp?.();
                   }}
                   className={cn(
-                    "relative border-r border-b border-border min-h-[34px] px-1 text-left transition-colors",
-                    isAvailable ? "bg-primary/20 hover:bg-primary/30" : "hover:bg-muted/50",
+                    "relative border-r border-b border-border min-h-[24px] px-1 text-left transition-colors",
+                    isAvailable ? "bg-success-soft/70 hover:bg-success-soft border-success/30" : "hover:bg-muted/50",
                     editable && "cursor-pointer"
                   )}
                 >
@@ -436,12 +471,12 @@ function MonthGrid({
           <button
             key={dKey}
             onClick={() => onDayClick(date)}
-            className={cn("h-32 border-r border-b border-border p-2 text-left hover:bg-muted/50", !inCurrentMonth && "opacity-45")}
+            className={cn("h-24 md:h-28 border-r border-b border-border p-2 text-left hover:bg-muted/50", !inCurrentMonth && "opacity-45")}
           >
             <div className="text-sm font-semibold tabular-nums">{date.getDate()}</div>
             <div className="mt-2 space-y-1">
               <div className="text-[11px] text-muted-foreground">{meetings.length} meetings</div>
-              <div className="text-[11px] text-primary">{spotCount} available spots</div>
+              <div className="text-[11px] text-success">{spotCount} available spots</div>
             </div>
           </button>
         );
