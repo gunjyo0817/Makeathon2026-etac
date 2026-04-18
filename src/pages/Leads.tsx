@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { leads, projects, STATUS_COLUMNS, type LeadStatus, type Temperature } from "@/data/mock";
+import { leads, products, STATUS_COLUMNS, type LeadStatus, type Temperature } from "@/data/mock";
 import { StatusBadge, TemperatureBadge } from "@/components/sales/Badges";
 import { timeAgo } from "@/lib/format";
 import {
@@ -41,9 +41,10 @@ const ACTIVITY_OPTIONS: { id: ActivityFilter; label: string }[] = [
 
 export default function Leads() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leadQuery, setLeadQuery] = useState("");
   const [companyQuery, setCompanyQuery] = useState("");
-  const [projectId, setProjectId] = useState<string>("all");
+  const [productId, setProductId] = useState<string>("all");
   const [status, setStatus] = useState<LeadStatus | "all">("all");
   const [temp, setTemp] = useState<Temperature | "all">("all");
   const [intentFilter, setIntentFilter] = useState<IntentFilter>("all");
@@ -51,20 +52,42 @@ export default function Leads() {
   const hasActiveFilters =
     leadQuery !== "" ||
     companyQuery !== "" ||
-    projectId !== "all" ||
+    productId !== "all" ||
     status !== "all" ||
     temp !== "all" ||
     intentFilter !== "all" ||
     activityFilter !== "all";
 
+  useEffect(() => {
+    const productIdFromQuery = searchParams.get("productId");
+    if (productIdFromQuery && products.some((product) => product.id === productIdFromQuery) && productIdFromQuery !== productId) {
+      setProductId(productIdFromQuery);
+      return;
+    }
+
+    if (!productIdFromQuery && productId !== "all") {
+      setProductId("all");
+    }
+  }, [productId, searchParams]);
+
+  useEffect(() => {
+    const current = searchParams.get("productId") ?? "all";
+    if (current === productId) return;
+
+    const next = new URLSearchParams(searchParams);
+    if (productId === "all") next.delete("productId");
+    else next.set("productId", productId);
+    setSearchParams(next, { replace: true });
+  }, [productId, searchParams, setSearchParams]);
+
   const filtered = useMemo(() => {
     return leads.filter((l) => {
-      const project = projects.find((p) => p.id === l.projectId);
+      const product = products.find((p) => p.id === l.productId);
       const ageDays = (Date.now() - new Date(l.lastInteractionAt).getTime()) / 86_400_000;
 
       if (leadQuery && !`${l.name} ${l.role}`.toLowerCase().includes(leadQuery.toLowerCase())) return false;
-      if (companyQuery && !`${l.company} ${project?.name ?? ""}`.toLowerCase().includes(companyQuery.toLowerCase())) return false;
-      if (projectId !== "all" && l.projectId !== projectId) return false;
+      if (companyQuery && !`${l.company} ${product?.name ?? ""}`.toLowerCase().includes(companyQuery.toLowerCase())) return false;
+      if (productId !== "all" && l.productId !== productId) return false;
       if (status !== "all" && l.status !== status) return false;
       if (temp !== "all" && l.temperature !== temp) return false;
 
@@ -79,12 +102,12 @@ export default function Leads() {
 
       return true;
     });
-  }, [activityFilter, companyQuery, intentFilter, leadQuery, projectId, status, temp]);
+  }, [activityFilter, companyQuery, intentFilter, leadQuery, productId, status, temp]);
 
   const clearFilters = () => {
     setLeadQuery("");
     setCompanyQuery("");
-    setProjectId("all");
+    setProductId("all");
     setStatus("all");
     setTemp("all");
     setIntentFilter("all");
@@ -145,13 +168,13 @@ export default function Leads() {
                   <th className="text-left font-semibold px-5 py-3">
                     <SelectFilterHeader
                       label="Product"
-                      value={projectId}
-                      summary={projectId === "all" ? "All" : projects.find((p) => p.id === projectId)?.name ?? "All"}
+                      value={productId}
+                      summary={productId === "all" ? "All" : products.find((p) => p.id === productId)?.name ?? "All"}
                       options={[
                         { id: "all", label: "All products" },
-                        ...projects.map((project) => ({ id: project.id, label: project.name })),
+                        ...products.map((product) => ({ id: product.id, label: product.name })),
                       ]}
-                      onValueChange={setProjectId}
+                      onValueChange={setProductId}
                     />
                   </th>
                   <th className="text-left font-semibold px-5 py-3">
@@ -203,7 +226,7 @@ export default function Leads() {
               </thead>
               <tbody>
                 {filtered.map((l) => {
-                  const project = projects.find((p) => p.id === l.projectId);
+                  const product = products.find((p) => p.id === l.productId);
                   return (
                     <tr
                       key={l.id}
@@ -227,7 +250,7 @@ export default function Leads() {
                           {l.company}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-muted-foreground">{project?.name}</td>
+                      <td className="px-5 py-3.5 text-xs text-muted-foreground">{product?.name}</td>
                       <td className="px-5 py-3.5"><StatusBadge status={l.status} /></td>
                       <td className="px-5 py-3.5"><TemperatureBadge temp={l.temperature} /></td>
                       <td className="px-5 py-3.5 text-right tabular-nums font-semibold">

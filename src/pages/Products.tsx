@@ -1,7 +1,7 @@
 import { useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { projects, leads, STATUS_COLUMNS } from "@/data/mock";
+import { products, leads, STATUS_COLUMNS } from "@/data/mock";
 import { FolderKanban, ArrowRight, Plus, Users, TrendingUp } from "lucide-react";
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export default function Projects() {
+export default function Products() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState({
     name: "",
@@ -135,15 +135,15 @@ export default function Projects() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {projects.map((p) => {
-            const projectLeads = leads.filter((l) => l.projectId === p.id);
-            const qualified = projectLeads.filter((l) => l.status === "qualified" || l.status === "meeting").length;
-            const conv = projectLeads.length ? Math.round((qualified / projectLeads.length) * 100) : 0;
+          {products.map((p) => {
+            const productLeads = leads.filter((l) => l.productId === p.id);
+            const qualified = productLeads.filter((l) => l.status === "qualified" || l.status === "meeting").length;
+            const conv = productLeads.length ? Math.round((qualified / productLeads.length) * 100) : 0;
 
             return (
               <button
                 key={p.id}
-                onClick={() => navigate(`/projects/${p.id}`)}
+                onClick={() => navigate(`/products/${p.id}`)}
                 className="text-left bg-card border border-border rounded-3xl p-6 shadow-card hover:shadow-clay hover:-translate-y-0.5 hover:border-primary/40 transition-all group flex flex-col gap-5"
               >
                 <div className="flex items-start justify-between">
@@ -159,15 +159,15 @@ export default function Projects() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
-                  <Stat icon={Users} label="Leads" value={projectLeads.length} />
+                  <Stat icon={Users} label="Leads" value={productLeads.length} />
                   <Stat icon={TrendingUp} label="Qualified" value={qualified} />
                   <Stat label="Interest" value={`${conv}%`} />
                 </div>
 
                 <div className="flex gap-1">
                   {STATUS_COLUMNS.map((c) => {
-                    const count = projectLeads.filter((l) => l.status === c.id).length;
-                    const pct = projectLeads.length ? (count / projectLeads.length) * 100 : 0;
+                    const count = productLeads.filter((l) => l.status === c.id).length;
+                    const pct = productLeads.length ? (count / productLeads.length) * 100 : 0;
                     return <div key={c.id} className="h-1.5 rounded-full bg-primary/60" style={{ flex: pct || 0.05 }} title={`${c.label}: ${count}`} />;
                   })}
                 </div>

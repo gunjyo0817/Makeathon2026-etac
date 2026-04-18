@@ -1,18 +1,18 @@
 import { useState, useMemo } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { MetricsRow } from "@/components/sales/MetricsRow";
-import { ProjectSelector } from "@/components/sales/ProjectSelector";
+import { ProductSelector } from "@/components/sales/ProductSelector";
 import { CalendarPanel } from "@/components/sales/CalendarPanel";
 import { PipelineBoard } from "@/components/sales/PipelineBoard";
 import { ConversationAttentionPanel } from "@/components/sales/ConversationAttentionPanel";
-import { conversationsNeedingAttention, leads, projects } from "@/data/mock";
+import { conversationsNeedingAttention, leads, products } from "@/data/mock";
 
 export default function Dashboard() {
-  const [projectId, setProjectId] = useState(projects[0].id);
-  const filteredLeads = useMemo(() => leads.filter((l) => l.projectId === projectId), [projectId]);
+  const [productId, setProductId] = useState(products[0].id);
+  const filteredLeads = useMemo(() => leads.filter((l) => l.productId === productId), [productId]);
   const attentionItems = useMemo(
-    () => conversationsNeedingAttention.filter((item) => item.projectId === projectId),
-    [projectId]
+    () => conversationsNeedingAttention.filter((item) => item.productId === productId),
+    [productId]
   );
 
   return (
@@ -26,10 +26,10 @@ export default function Dashboard() {
               <span className="text-primary font-medium"> Meridian Design Studio</span> showroom call is booked for 10:30 AM today.
             </p>
           </div>
-          <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
+          <ProductSelector selectedId={productId} onSelect={setProductId} />
         </header>
 
-        <MetricsRow projectId={projectId} />
+        <MetricsRow productId={productId} />
 
         <ConversationAttentionPanel items={attentionItems} />
 

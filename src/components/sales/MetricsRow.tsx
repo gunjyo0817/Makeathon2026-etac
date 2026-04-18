@@ -1,4 +1,4 @@
-import { getAgentByProjectId, leads } from "@/data/mock";
+import { getAgentByProductId, leads } from "@/data/mock";
 import { TrendingUp, Users, CheckCircle2, Calendar, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -10,18 +10,18 @@ const toneClass = {
   warning: "bg-warning-soft text-warning",
 };
 
-export function MetricsRow({ projectId }: { projectId: string }) {
+export function MetricsRow({ productId }: { productId: string }) {
   const navigate = useNavigate();
-  const projectLeads = leads.filter((lead) => lead.projectId === projectId);
-  const activeLeads = projectLeads.filter((lead) => lead.status !== "closed");
-  const qualifiedLeads = projectLeads.filter((lead) => lead.status === "qualified" || lead.status === "meeting");
-  const meetings = projectLeads
+  const productLeads = leads.filter((lead) => lead.productId === productId);
+  const activeLeads = productLeads.filter((lead) => lead.status !== "closed");
+  const qualifiedLeads = productLeads.filter((lead) => lead.status === "qualified" || lead.status === "meeting");
+  const meetings = productLeads
     .flatMap((lead) => lead.meetings.map((meeting) => ({ ...meeting, leadName: lead.name })))
     .sort((a, b) => a.start.localeCompare(b.start));
-  const responseRate = projectLeads.length
-    ? Math.round((projectLeads.filter((lead) => lead.status === "responded" || lead.status === "qualified" || lead.status === "meeting").length / projectLeads.length) * 100)
+  const responseRate = productLeads.length
+    ? Math.round((productLeads.filter((lead) => lead.status === "responded" || lead.status === "qualified" || lead.status === "meeting").length / productLeads.length) * 100)
     : 0;
-  const agent = getAgentByProjectId(projectId);
+  const agent = getAgentByProductId(productId);
   const channelBaseRate: Record<string, number> = { Email: 61, SMS: 54, Phone: 72, Chat: 67, WhatsApp: 64 };
   const channelRates = (agent?.channels ?? ["Email", "Phone"]).map((channel) => ({
     channel,

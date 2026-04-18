@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { leads, projects, type Meeting } from "@/data/mock";
+import { leads, products, type Meeting } from "@/data/mock";
 import { MeetingTypeBadge } from "@/components/sales/Badges";
 import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
-import { ProjectSelector } from "@/components/sales/ProjectSelector";
+import { ProductSelector } from "@/components/sales/ProductSelector";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
@@ -22,7 +22,7 @@ type ViewMode = "day" | "3days" | "week" | "month";
 type LayoutMode = "calendar" | "list";
 type MeetingWithLead = Meeting & { leadName: string };
 type MeetingStatus = "scheduled" | "rescheduled" | "cancelled";
-type MeetingWithLeadRecord = MeetingWithLead & { projectId: string; status: MeetingStatus };
+type MeetingWithLeadRecord = MeetingWithLead & { productId: string; status: MeetingStatus };
 
 const viewModes: { id: ViewMode; label: string }[] = [
   { id: "day", label: "1 Day" },
@@ -36,7 +36,7 @@ const timeSlots = Array.from({ length: 21 }, (_, i) => slotFromIndex(i)); // 08:
 export default function Meetings() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [projectId, setProjectId] = useState(projects[0].id);
+  const [productId, setProductId] = useState(products[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [anchorDate, setAnchorDate] = useState(stripTime(new Date()));
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("calendar");
@@ -47,25 +47,25 @@ export default function Meetings() {
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [spotsDraft, setSpotsDraft] = useState<Record<string, string[]>>({});
   const [dragState, setDragState] = useState<{ dateKey: string; mode: "add" | "remove" } | null>(null);
-  const [availabilityByProject, setAvailabilityByProject] = useState<Record<string, Record<string, string[]>>>(() =>
-    Object.fromEntries(projects.map((project) => [project.id, {}]))
+  const [availabilityByProduct, setAvailabilityByProduct] = useState<Record<string, Record<string, string[]>>>(() =>
+    Object.fromEntries(products.map((product) => [product.id, {}]))
   );
   const [meetingRecords, setMeetingRecords] = useState<MeetingWithLeadRecord[]>(() =>
     leads.flatMap((lead) =>
       lead.meetings.map((meeting) => ({
         ...meeting,
         leadName: lead.name,
-        projectId: lead.projectId,
+        productId: lead.productId,
         status: "scheduled" as MeetingStatus,
       }))
     )
   );
-  const selectedProject = projects.find((project) => project.id === projectId);
+  const selectedProduct = products.find((product) => product.id === productId);
 
   useEffect(() => {
-    const projectIdFromQuery = searchParams.get("projectId");
-    if (projectIdFromQuery && projects.some((project) => project.id === projectIdFromQuery)) {
-      setProjectId(projectIdFromQuery);
+    const productIdFromQuery = searchParams.get("productId");
+    if (productIdFromQuery && products.some((product) => product.id === productIdFromQuery)) {
+      setProductId(productIdFromQuery);
       setAnchorDate(stripTime(new Date()));
     }
   }, [searchParams]);
@@ -73,9 +73,9 @@ export default function Meetings() {
   const allMeetings = useMemo(
     (): MeetingWithLead[] =>
       meetingRecords
-        .filter((meeting) => meeting.projectId === projectId)
+        .filter((meeting) => meeting.productId === productId)
         .sort((a, b) => a.start.localeCompare(b.start)),
-    [meetingRecords, projectId]
+    [meetingRecords, productId]
   );
 
   const visibleDates = useMemo(() => {
@@ -101,7 +101,7 @@ export default function Meetings() {
     return map;
   }, [allMeetings]);
 
-  const availability = availabilityByProject[projectId] ?? {};
+  const availability = availabilityByProduct[productId] ?? {};
   const hasSpotsDraftChanges = JSON.stringify(spotsDraft) !== JSON.stringify(availability);
 
   const rangeLabel = useMemo(() => {
@@ -146,15 +146,15 @@ export default function Meetings() {
 
   const toggleSpot = (date: Date, slot: string) => {
     const key = dateKey(date);
-    setAvailabilityByProject((prev) => {
-      const projectMap = prev[projectId] ?? {};
-      const current = new Set(projectMap[key] ?? []);
+    setAvailabilityByProduct((prev) => {
+      const productMap = prev[productId] ?? {};
+      const current = new Set(productMap[key] ?? []);
       if (current.has(slot)) current.delete(slot);
       else current.add(slot);
       return {
         ...prev,
-        [projectId]: {
-          ...projectMap,
+        [productId]: {
+          ...productMap,
           [key]: Array.from(current).sort(),
         },
       };
@@ -201,9 +201,9 @@ export default function Meetings() {
   };
 
   const saveSpotsDialog = () => {
-    setAvailabilityByProject((prev) => ({
+    setAvailabilityByProduct((prev) => ({
       ...prev,
-      [projectId]: spotsDraft,
+      [productId]: spotsDraft,
     }));
     setIsSpotsDialogOpen(false);
     setDragState(null);
@@ -237,14 +237,14 @@ export default function Meetings() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Meetings</h1>
             <p className="text-muted-foreground mt-2 text-sm">Calendar-first scheduling for showroom visits, lead calls, and specification reviews.</p>
-            {selectedProject ? (
+            {selectedProduct ? (
               <div className="mt-3 inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                Viewing {selectedProject.name}
+                Viewing {selectedProduct.name}
               </div>
             ) : null}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
+            <ProductSelector selectedId={productId} onSelect={setProductId} />
             <div className="flex items-center rounded-2xl border border-border bg-card p-1">
               <button
                 onClick={() => setLayoutMode("calendar")}

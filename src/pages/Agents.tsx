@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { ProjectSelector } from "@/components/sales/ProjectSelector";
-import { agents, getAgentByProjectId, projectAgentConfigs, projects } from "@/data/mock";
+import { ProductSelector } from "@/components/sales/ProductSelector";
+import { agents, getAgentByProductId, productAgentConfigs, products } from "@/data/mock";
 import { Bot, Pause, Play, Settings2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
@@ -18,23 +18,23 @@ import {
 
 export default function Agents() {
   const [searchParams] = useSearchParams();
-  const [projectId, setProjectId] = useState(projects[0].id);
+  const [productId, setProductId] = useState(products[0].id);
   const [statuses, setStatuses] = useState<Record<string, "active" | "paused">>(() =>
     Object.fromEntries(agents.map((agent) => [agent.id, agent.status]))
   );
   const [agentOverrides, setAgentOverrides] = useState<Record<string, (typeof agents)[number]>>({});
-  const [configOverrides, setConfigOverrides] = useState(projectAgentConfigs);
+  const [configOverrides, setConfigOverrides] = useState(productAgentConfigs);
 
   useEffect(() => {
-    const projectIdFromQuery = searchParams.get("projectId");
-    if (projectIdFromQuery && projects.some((project) => project.id === projectIdFromQuery)) {
-      setProjectId(projectIdFromQuery);
+    const productIdFromQuery = searchParams.get("productId");
+    if (productIdFromQuery && products.some((product) => product.id === productIdFromQuery)) {
+      setProductId(productIdFromQuery);
     }
   }, [searchParams]);
 
-  const baseAgent = getAgentByProjectId(projectId);
+  const baseAgent = getAgentByProductId(productId);
   const agent = baseAgent ? agentOverrides[baseAgent.id] ?? baseAgent : undefined;
-  const config = configOverrides[projectId];
+  const config = configOverrides[productId];
 
   const toggleStatus = (agentId: string) => {
     setStatuses((prev) => ({
@@ -51,19 +51,19 @@ export default function Agents() {
             <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
             <p className="text-muted-foreground mt-2 text-sm">Each product can have a dedicated assistant for lead outreach, quoting, and follow-up.</p>
           </div>
-          <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
+          <ProductSelector selectedId={productId} onSelect={setProductId} />
         </header>
 
         <div className="bg-card border border-border rounded-3xl p-5">
           <div className="flex items-center justify-end mb-3">
-            <ConfigureProjectContextDialog
+            <ConfigureProductContextDialog
               persona={config?.persona ?? ""}
               dataKnowledge={config?.dataKnowledge ?? ""}
               onSave={(next) =>
                 setConfigOverrides((prev) => ({
                   ...prev,
-                  [projectId]: {
-                    ...(prev[projectId] ?? projectAgentConfigs[projectId]),
+                  [productId]: {
+                    ...(prev[productId] ?? productAgentConfigs[productId]),
                     persona: next.persona,
                     dataKnowledge: next.dataKnowledge,
                   },
@@ -286,7 +286,7 @@ function ConfigureAgentDialog({
   );
 }
 
-function ConfigureProjectContextDialog({
+function ConfigureProductContextDialog({
   persona,
   dataKnowledge,
   onSave,
