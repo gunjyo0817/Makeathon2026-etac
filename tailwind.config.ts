@@ -9,6 +9,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+        display: ["Cormorant Garamond", "Times New Roman", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",

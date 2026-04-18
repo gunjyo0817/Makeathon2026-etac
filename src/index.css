@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,6 +8,8 @@
 
 @layer base {
   :root {
+    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    --font-display: "Cormorant Garamond", "Times New Roman", serif;
     /* Core surfaces */
     --background: 36 33% 97%;            /* paper #FAF7F2 */
     --foreground: 18 14% 17%;            /* ink #322B27 */
@@ -108,8 +110,20 @@
   html, body, #root { height: 100%; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 0.95;
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 700;
   }
 }
 
