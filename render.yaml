@@ -1,0 +1,17 @@
+# Render Blueprint: FastAPI lives under backend/ (package app.*).
+# Dashboard alternative: set Root Directory = "backend", same build/start commands.
+services:
+  - type: web
+    name: etac-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: HAPPYROBOT_API_KEY
+        sync: false
+      - key: HAPPYROBOT_BASE_URL
+        value: https://platform.eu.happyrobot.ai/api/v2
+      - key: APP_ENV
+        value: production
