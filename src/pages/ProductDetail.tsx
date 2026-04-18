@@ -131,7 +131,7 @@ export default function ProductDetail() {
               {productLeads.slice(0, 6).map((lead) => (
                 <button
                   key={lead.id}
-                  onClick={() => navigate(`/leads?productId=${product.id}`)}
+                  onClick={() => navigate(`/leads/${lead.id}`)}
                   className="w-full px-5 py-4 text-left hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex items-center justify-between gap-4 flex-wrap">
