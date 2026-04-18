@@ -98,7 +98,7 @@ export default function Leads() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              {filtered.length} of {leads.length} leads across all projects.
+              {filtered.length} of {leads.length} lead records across all products.
             </p>
           </div>
         </header>
@@ -106,7 +106,7 @@ export default function Leads() {
         <div className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
             <div className="text-xs text-muted-foreground">
-              Filter directly from each column header.
+              Filter by lead, company, product, and activity.
             </div>
             <button
               type="button"
@@ -144,11 +144,11 @@ export default function Leads() {
                   </th>
                   <th className="text-left font-semibold px-5 py-3">
                     <SelectFilterHeader
-                      label="Project"
+                      label="Product"
                       value={projectId}
                       summary={projectId === "all" ? "All" : projects.find((p) => p.id === projectId)?.name ?? "All"}
                       options={[
-                        { id: "all", label: "All projects" },
+                        { id: "all", label: "All products" },
                         ...projects.map((project) => ({ id: project.id, label: project.name })),
                       ]}
                       onValueChange={setProjectId}
@@ -178,10 +178,10 @@ export default function Leads() {
                   <th className="text-right font-semibold px-5 py-3">
                     <div className="flex justify-end">
                       <SelectFilterHeader
-                        label="Intent"
-                        value={intentFilter}
-                        summary={INTENT_OPTIONS.find((item) => item.id === intentFilter)?.label ?? "All intents"}
-                        options={INTENT_OPTIONS}
+                      label="Interest"
+                      value={intentFilter}
+                      summary={INTENT_OPTIONS.find((item) => item.id === intentFilter)?.label ?? "All intents"}
+                      options={INTENT_OPTIONS}
                         onValueChange={(value) => setIntentFilter(value as IntentFilter)}
                         align="end"
                       />
@@ -190,10 +190,10 @@ export default function Leads() {
                   <th className="text-right font-semibold px-5 py-3">
                     <div className="flex justify-end">
                       <SelectFilterHeader
-                        label="Last activity"
-                        value={activityFilter}
-                        summary={ACTIVITY_OPTIONS.find((item) => item.id === activityFilter)?.label ?? "Any time"}
-                        options={ACTIVITY_OPTIONS}
+                      label="Last touch"
+                      value={activityFilter}
+                      summary={ACTIVITY_OPTIONS.find((item) => item.id === activityFilter)?.label ?? "Any time"}
+                      options={ACTIVITY_OPTIONS}
                         onValueChange={(value) => setActivityFilter(value as ActivityFilter)}
                         align="end"
                       />
@@ -240,7 +240,7 @@ export default function Leads() {
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={7} className="text-center py-12 text-sm text-muted-foreground">
-                      No leads match your filters.
+                      No lead records match your filters.
                     </td>
                   </tr>
                 )}

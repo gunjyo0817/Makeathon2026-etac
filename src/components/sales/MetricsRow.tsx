@@ -54,7 +54,7 @@ export function MetricsRow({ projectId }: { projectId: string }) {
     {
       label: "Qualified Leads",
       value: qualifiedLeads.length,
-      delta: `${qualifiedLeads.length} in pipeline`,
+      delta: `${qualifiedLeads.length} in consideration`,
       deltaTone: "success" as const,
       icon: CheckCircle2,
       detailTitle: "Qualified Leads",
@@ -66,7 +66,7 @@ export function MetricsRow({ projectId }: { projectId: string }) {
                 onClick={() => navigate(`/leads/${lead.id}`)}
                 className="w-full text-left text-xs text-muted-foreground px-3 py-2.5 hover:bg-muted transition-colors"
               >
-                {lead.name} - intent {lead.intentScore}
+                {lead.name} - interest {lead.intentScore}
               </button>
             </li>
           ))}

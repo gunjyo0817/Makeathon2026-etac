@@ -236,7 +236,7 @@ export default function Meetings() {
         <header className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Meetings</h1>
-            <p className="text-muted-foreground mt-2 text-sm">Calendar-first scheduling. Agents use your available spots to open booking windows to leads.</p>
+            <p className="text-muted-foreground mt-2 text-sm">Calendar-first scheduling for showroom visits, lead calls, and specification reviews.</p>
             {selectedProject ? (
               <div className="mt-3 inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
                 Viewing {selectedProject.name}

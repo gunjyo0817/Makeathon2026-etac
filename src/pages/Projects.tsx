@@ -19,6 +19,8 @@ export default function Projects() {
     name: "",
     description: "",
     objective: "",
+    price: "",
+    texture: "",
   });
 
   return (
@@ -26,9 +28,9 @@ export default function Projects() {
       <div className="px-8 pb-10 pt-2 flex flex-col gap-7 max-w-[1600px] mx-auto">
         <header className="flex items-end justify-between gap-6 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Products</h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              Each project is an independent campaign with its own leads, agents, and pipeline.
+              Browse furniture pieces with structured details, materials, and sales context.
             </p>
           </div>
           <Dialog
@@ -38,42 +40,63 @@ export default function Projects() {
                   name: "",
                   description: "",
                   objective: "",
+                  price: "",
+                  texture: "",
                 });
               }
             }}
           >
             <DialogTrigger asChild>
               <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-2xl px-4 py-2.5 text-sm font-semibold shadow-clay hover:opacity-90 transition-opacity">
-                <Plus className="size-4" /> New Project
+                <Plus className="size-4" /> New Product
               </button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl rounded-3xl border-border bg-card/95 backdrop-blur-sm">
               <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
+                <DialogTitle>Create New Product</DialogTitle>
               </DialogHeader>
 
-              <Field label="Project name">
+              <Field label="Product name">
                 <Input
-                  placeholder="AI SDR for Healthcare"
+                  placeholder="Linden Lounge Chair"
                   value={draft.name}
                   onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
                 />
               </Field>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Price">
+                  <Input
+                    type="number"
+                    placeholder="1299"
+                    value={draft.price}
+                    onChange={(e) => setDraft((prev) => ({ ...prev, price: e.target.value }))}
+                  />
+                </Field>
+
+                <Field label="Texture">
+                  <Input
+                    placeholder="Boucle fabric"
+                    value={draft.texture}
+                    onChange={(e) => setDraft((prev) => ({ ...prev, texture: e.target.value }))}
+                  />
+                </Field>
+              </div>
+
               <Field label="Short description">
                 <textarea
                   rows={3}
-                  placeholder="Outbound to growth-stage healthcare operators"
+                  placeholder="A sculpted accent chair with a low profile and wrapped upholstery for calm, modern interiors."
                   value={draft.description}
                   onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
                   className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
                 />
               </Field>
 
-              <Field label="Project objective">
+              <Field label="Product notes">
                 <textarea
                   rows={4}
-                  placeholder="Generate qualified meetings with healthcare operators and route strong opportunities into the sales team."
+                  placeholder="Designed for boutique hotel lounges, reading corners, and warm residential spaces."
                   value={draft.objective}
                   onChange={(e) => setDraft((prev) => ({ ...prev, objective: e.target.value }))}
                   className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
@@ -82,8 +105,16 @@ export default function Projects() {
 
               <div className="rounded-2xl border border-border bg-muted/30 p-4">
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Preview</div>
-                <div className="mt-2 text-base font-bold">{draft.name || "Untitled project"}</div>
+                <div className="mt-2 text-base font-bold">{draft.name || "Untitled product"}</div>
                 <div className="mt-1 text-sm text-muted-foreground">{draft.description || "Short description will appear here."}</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center rounded-full bg-card border border-border px-3 py-1 text-xs font-semibold text-foreground">
+                    {draft.price ? `$${draft.price}` : "Price"}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-card border border-border px-3 py-1 text-xs font-semibold text-foreground">
+                    {draft.texture || "Texture"}
+                  </span>
+                </div>
               </div>
 
               <DialogFooter>
@@ -96,7 +127,7 @@ export default function Projects() {
                   type="button"
                   className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold opacity-60 cursor-not-allowed"
                 >
-                  Create Project
+                  Create Product
                 </button>
               </DialogFooter>
             </DialogContent>
@@ -130,7 +161,7 @@ export default function Projects() {
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
                   <Stat icon={Users} label="Leads" value={projectLeads.length} />
                   <Stat icon={TrendingUp} label="Qualified" value={qualified} />
-                  <Stat label="Conv." value={`${conv}%`} />
+                  <Stat label="Interest" value={`${conv}%`} />
                 </div>
 
                 <div className="flex gap-1">

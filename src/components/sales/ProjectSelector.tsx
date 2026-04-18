@@ -46,7 +46,7 @@ export function ProjectSelector({
           <FolderKanban className="size-4" />
         </div>
         <div className="text-left min-w-0">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold leading-none">Active Project</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold leading-none">Active Product</div>
           <div className="text-sm font-semibold mt-0.5 truncate">{selected.name}</div>
         </div>
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />

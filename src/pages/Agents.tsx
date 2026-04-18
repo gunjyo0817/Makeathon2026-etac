@@ -49,7 +49,7 @@ export default function Agents() {
         <header className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
-            <p className="text-muted-foreground mt-2 text-sm">One project, one dedicated AI agent with project-specific persona and API routing.</p>
+            <p className="text-muted-foreground mt-2 text-sm">Each product can have a dedicated assistant for lead outreach, quoting, and follow-up.</p>
           </div>
           <ProjectSelector selectedId={projectId} onSelect={setProjectId} />
         </header>
@@ -73,11 +73,11 @@ export default function Agents() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Persona</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Product Voice</div>
               <div className="text-sm mt-1.5 leading-relaxed">{config?.persona}</div>
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Knowledge Context</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Product Knowledge</div>
               <div className="text-sm mt-1.5 leading-relaxed">{config?.dataKnowledge}</div>
             </div>
           </div>
@@ -85,7 +85,7 @@ export default function Agents() {
 
         {!agent ? (
           <div className="bg-card border border-border rounded-3xl p-10 text-center text-sm text-muted-foreground">
-            No agent configured for this project yet.
+            No assistant is configured for this product yet.
           </div>
         ) : (
           <article className="bg-card border border-border rounded-3xl p-5 shadow-card flex flex-col gap-4">
@@ -190,7 +190,7 @@ function ConfigureAgentDialog({
       <DialogContent className="max-w-2xl rounded-2xl">
         <DialogHeader>
           <DialogTitle>Configure {agent.name}</DialogTitle>
-          <DialogDescription>Project-bound agent settings. This agent handles phone-call tasks via Happy Robot.</DialogDescription>
+          <DialogDescription>Product-bound assistant settings for outreach, quoting, and lead follow-up.</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -311,11 +311,11 @@ function ConfigureProjectContextDialog({
       </DialogTrigger>
       <DialogContent className="max-w-2xl rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Edit Project Agent Context</DialogTitle>
-          <DialogDescription>Project-level instructions used by the single assigned agent.</DialogDescription>
+          <DialogTitle>Edit Product Assistant Context</DialogTitle>
+          <DialogDescription>Product-level instructions used by the assigned assistant.</DialogDescription>
         </DialogHeader>
 
-        <Field label="Project persona">
+        <Field label="Product voice">
           <textarea
             rows={5}
             value={draft.persona}
