@@ -29,6 +29,8 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          soft: "hsl(var(--destructive-soft))",
+          ink: "hsl(var(--destructive-ink))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -57,6 +59,12 @@ export default {
         info: {
           DEFAULT: "hsl(var(--info))",
           soft: "hsl(var(--info-soft))",
+        },
+        label: {
+          lavender: {
+            DEFAULT: "hsl(var(--label-lavender-bg))",
+            foreground: "hsl(var(--label-lavender-fg))",
+          },
         },
         temp: {
           hot: "hsl(var(--temp-hot))",

@@ -44,7 +44,7 @@ export default function Analytics() {
                 </div>
               </div>
               <div className="text-3xl font-bold tracking-tight tabular-nums">{k.value}</div>
-              <div className={cn("inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold", k.up ? "bg-success-soft text-success" : "bg-destructive/10 text-destructive")}>
+              <div className={cn("inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold", k.up ? "bg-success-soft text-success" : "bg-destructive-soft text-destructive-ink")}>
                 {k.up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
                 {k.delta}
               </div>
