@@ -87,7 +87,7 @@ function ProfileSection() {
       <div className="flex items-center gap-5">
         <div className="size-20 rounded-full bg-gradient-clay text-primary-foreground flex items-center justify-center font-bold text-2xl shadow-clay">ET</div>
         <div className="flex flex-col gap-1.5">
-          <button className="px-4 py-2 rounded-full bg-foreground text-background text-sm font-semibold hover:opacity-90 transition-opacity">
+          <button className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow-clay hover:opacity-90 transition-opacity">
             Upload new photo
           </button>
           <span className="text-xs text-muted-foreground">JPG or PNG, max 2MB.</span>
@@ -153,7 +153,7 @@ function IntegrationsSection() {
                 "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0",
                 i.connected
                   ? "bg-success-soft text-success hover:opacity-80"
-                  : "bg-foreground text-background hover:opacity-90"
+                  : "bg-primary text-primary-foreground shadow-clay hover:opacity-90"
               )}
             >
               {i.connected ? <span className="inline-flex items-center gap-1"><Check className="size-3" /> Connected</span> : "Connect"}
