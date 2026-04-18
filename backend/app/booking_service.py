@@ -103,12 +103,12 @@ def set_available_slots(lead_id: str, slots: list[str]) -> BookingSession | None
     return s
 
 
-def confirm_slot(token: str, slot_iso: str) -> BookingSession | None:
+def confirm_slot(token: str, slot_iso: str, *, allow_any: bool = False) -> BookingSession | None:
     s = get_session(token)
     if not s:
         return None
     slot = slot_iso.strip()
-    if slot not in s.available_slots:
+    if not allow_any and slot not in s.available_slots:
         return None
     s.selected_slot = slot
     s.updated_at = _utcnow()
@@ -128,11 +128,12 @@ class PublishSlotsBody(BaseModel):
 
 
 class ConfirmBookingBody(BaseModel):
-    slot_start: str = Field(
-        ...,
-        min_length=1,
-        description="Must be one of the session's available_slots",
-    )
+    """In-memory list: set slot_start only. Twin rows: set slot_id (+ optional product_id, meeting_name)."""
+
+    slot_start: str = ""
+    slot_id: int | str | None = None
+    product_id: int | str | None = None
+    meeting_name: str | None = None
 
 
 class OutboundNotifyPayload(BaseModel):

@@ -134,12 +134,20 @@ export async function getLatestConversationAssignmentForLead(
   );
 }
 
+export type TwinSlotOption = {
+  id: string | number;
+  starts_at: string;
+  ends_at?: string | null;
+};
+
 export type BookingSessionResponse = {
   lead_id: string;
   display_name: string;
   email?: string | null;
   company?: string | null;
   available_slots: string[];
+  /** From Twin `etac_meeting_slots`: shared sales slots, same list for every booking link (hackathon: one rep). */
+  twin_slots?: TwinSlotOption[];
   selected_slot?: string | null;
   booking_confirmed: boolean;
 };
@@ -149,10 +157,69 @@ export async function getBookingSession(token: string): Promise<BookingSessionRe
   return request<BookingSessionResponse>(`/api/booking/sessions/${t}`);
 }
 
-export async function confirmBookingSlot(token: string, slotStart: string): Promise<unknown> {
+export type ConfirmBookingPayload = {
+  slot_start?: string;
+  slot_id?: string | number;
+  product_id?: string | number;
+  meeting_name?: string;
+};
+
+export async function confirmBooking(token: string, payload: ConfirmBookingPayload): Promise<unknown> {
   const t = encodeURIComponent(token.trim());
   return request(`/api/booking/sessions/${t}/confirm`, {
     method: "POST",
-    body: JSON.stringify({ slot_start: slotStart }),
+    body: JSON.stringify({
+      slot_start: payload.slot_start ?? "",
+      slot_id: payload.slot_id ?? undefined,
+      product_id: payload.product_id ?? undefined,
+      meeting_name: payload.meeting_name ?? undefined,
+    }),
+  });
+}
+
+/** In-memory `available_slots` only (no Twin row). */
+export async function confirmBookingSlot(token: string, slotStart: string): Promise<unknown> {
+  return confirmBooking(token, { slot_start: slotStart });
+}
+
+// --- Twin tables (etac_meetings, etac_meeting_slots, …) ---
+
+export async function getTwinTableRows(tableName: string): Promise<Record<string, unknown>[]> {
+  const name = encodeURIComponent(tableName.trim());
+  const data = await request<TwinTableResponse<Record<string, unknown>>>(`/api/tables/${name}`);
+  return data.rows ?? [];
+}
+
+export async function insertTwinTableRow(
+  tableName: string,
+  values: Record<string, unknown>
+): Promise<unknown> {
+  const name = encodeURIComponent(tableName.trim());
+  return request(`/api/tables/${name}/rows`, {
+    method: "POST",
+    body: JSON.stringify({ values }),
+  });
+}
+
+export async function patchTwinTableRow(
+  tableName: string,
+  primaryKey: Record<string, unknown>,
+  updates: Record<string, unknown>
+): Promise<unknown> {
+  const name = encodeURIComponent(tableName.trim());
+  return request(`/api/tables/${name}/rows`, {
+    method: "PATCH",
+    body: JSON.stringify({ primaryKey, updates }),
+  });
+}
+
+export async function deleteTwinTableRows(
+  tableName: string,
+  rowKeys: Record<string, unknown>[]
+): Promise<unknown> {
+  const name = encodeURIComponent(tableName.trim());
+  return request(`/api/tables/${name}/rows`, {
+    method: "DELETE",
+    body: JSON.stringify({ rowKeys }),
   });
 }

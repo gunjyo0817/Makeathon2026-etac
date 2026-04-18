@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { confirmBookingSlot, getBookingSession } from "@/lib/api";
+import { confirmBooking, confirmBookingSlot, getBookingSession } from "@/lib/api";
 import { toast } from "sonner";
 
 function formatSlot(iso: string): string {
@@ -37,18 +37,36 @@ const LeadBooking = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: (slot: string) => confirmBookingSlot(safeToken, slot),
+    mutationFn: async (vars: { mode: "twin" | "memory"; selected: string; twinRowStartsAt?: string }) => {
+      if (vars.mode === "twin") {
+        const n = Number(vars.selected);
+        const slotId = Number.isFinite(n) && String(n) === vars.selected ? n : vars.selected;
+        return confirmBooking(safeToken, {
+          slot_id: slotId,
+          slot_start: vars.twinRowStartsAt ?? "",
+        });
+      }
+      return confirmBookingSlot(safeToken, vars.selected);
+    },
     onSuccess: () => {
-      toast.success("Time confirmed — you’ll receive a calendar invite by email.");
+      toast.success("Time confirmed — check your email for next steps.");
       void q.refetch();
     },
     onError: (e: Error) => toast.error(e.message || "Could not confirm"),
   });
 
-  const sortedSlots = useMemo(() => {
+  const twinSlots = q.data?.twin_slots ?? [];
+
+  const sortedMemorySlots = useMemo(() => {
     const slots = q.data?.available_slots ?? [];
     return [...slots].sort((a, b) => a.localeCompare(b));
   }, [q.data?.available_slots]);
+
+  const sortedTwinSlots = useMemo(() => {
+    return [...twinSlots].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  }, [twinSlots]);
+
+  const useTwinUi = sortedTwinSlots.length > 0;
 
   if (!safeToken) {
     return (
@@ -118,14 +136,62 @@ const LeadBooking = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {sortedSlots.length === 0 ? (
+          {useTwinUi ? (
+            sortedTwinSlots.length === 0 ? (
+              <p className="text-muted-foreground">
+                No open slots yet. Your sales rep will send updated times soon.
+              </p>
+            ) : (
+              <>
+                <RadioGroup value={selected} onValueChange={setSelected} className="gap-3">
+                  {sortedTwinSlots.map((slot) => {
+                    const sid = String(slot.id);
+                    return (
+                      <div
+                        key={sid}
+                        className="flex items-center space-x-3 rounded-lg border border-border/80 bg-card/50 px-3 py-3"
+                      >
+                        <RadioGroupItem value={sid} id={sid} />
+                        <Label htmlFor={sid} className="flex-1 cursor-pointer font-normal">
+                          {formatSlot(slot.starts_at)}
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </RadioGroup>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={!selected || mutation.isPending}
+                  onClick={() => {
+                    if (!selected) return;
+                    const row = sortedTwinSlots.find((s) => String(s.id) === selected);
+                    mutation.mutate({
+                      mode: "twin",
+                      selected,
+                      twinRowStartsAt: row?.starts_at,
+                    });
+                  }}
+                >
+                  {mutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Confirming…
+                    </>
+                  ) : (
+                    "Confirm time"
+                  )}
+                </Button>
+              </>
+            )
+          ) : sortedMemorySlots.length === 0 ? (
             <p className="text-muted-foreground">
               No open slots yet. Your sales rep will send updated times soon.
             </p>
           ) : (
             <>
               <RadioGroup value={selected} onValueChange={setSelected} className="gap-3">
-                {sortedSlots.map((slot) => (
+                {sortedMemorySlots.map((slot) => (
                   <div
                     key={slot}
                     className="flex items-center space-x-3 rounded-lg border border-border/80 bg-card/50 px-3 py-3"
@@ -141,7 +207,7 @@ const LeadBooking = () => {
                 className="w-full"
                 size="lg"
                 disabled={!selected || mutation.isPending}
-                onClick={() => selected && mutation.mutate(selected)}
+                onClick={() => selected && mutation.mutate({ mode: "memory", selected })}
               >
                 {mutation.isPending ? (
                   <>

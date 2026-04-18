@@ -275,6 +275,57 @@ def _require_booking_service_secret(x_booking_service_secret: str | None) -> Non
         raise HTTPException(status_code=401, detail="Invalid or missing X-Booking-Service-Secret")
 
 
+def _twin_row_id(row: dict[str, Any]) -> Any:
+    return row.get("id") if row.get("id") is not None else row.get("Id")
+
+
+def _sales_meeting_slots_response(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Shared sales availability pool: same rows for every lead (single rep hackathon)."""
+    twin_slots: list[dict[str, Any]] = []
+    for r in rows:
+        sid = _twin_row_id(r)
+        sa = r.get("starts_at") or r.get("startsAt")
+        if sid is None or sa is None:
+            continue
+        ea = r.get("ends_at") or r.get("endsAt")
+        twin_slots.append(
+            {
+                "id": sid,
+                "starts_at": str(sa),
+                "ends_at": str(ea) if ea is not None else None,
+            }
+        )
+    return twin_slots
+
+
+def _duration_minutes(start_iso: str, end_iso: str | None) -> int:
+    if not end_iso:
+        return 30
+    try:
+        from datetime import datetime
+
+        s = str(start_iso).replace("Z", "+00:00")
+        e = str(end_iso).replace("Z", "+00:00")
+        a = datetime.fromisoformat(s)
+        b = datetime.fromisoformat(e)
+        return max(1, int((b - a).total_seconds() // 60))
+    except Exception:
+        return 30
+
+
+def _coerce_int(v: Any) -> int | None:
+    if v is None:
+        return None
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        return v
+    try:
+        return int(str(v).strip(), 10)
+    except Exception:
+        return None
+
+
 async def _post_happyrobot_outbound(payload: dict[str, Any]) -> dict[str, Any]:
     url = (settings.happyrobot_outbound_webhook_url or "").strip()
     if not url:
@@ -350,12 +401,20 @@ async def booking_get_session(token: str) -> dict[str, Any]:
     session = get_session(token)
     if not session:
         raise HTTPException(status_code=404, detail="Invalid or expired booking link")
+    twin_slots: list[dict[str, Any]] = []
+    try:
+        data = await client.get_table_rows("etac_meeting_slots")
+        rows = data.get("rows") or []
+        twin_slots = _sales_meeting_slots_response(rows)
+    except Exception:
+        twin_slots = []
     return {
         "lead_id": session.lead_id,
         "display_name": session.full_name or "Guest",
         "email": session.email,
         "company": session.company,
         "available_slots": session.available_slots,
+        "twin_slots": twin_slots,
         "selected_slot": session.selected_slot,
         "booking_confirmed": session.selected_slot is not None,
     }
@@ -363,18 +422,78 @@ async def booking_get_session(token: str) -> dict[str, Any]:
 
 @app.post("/api/booking/sessions/{token}/confirm")
 async def booking_confirm(token: str, body: ConfirmBookingBody) -> dict[str, Any]:
-    slot = body.slot_start.strip()
-    session = confirm_slot(token, slot)
+    session = get_session(token)
     if not session:
-        raise HTTPException(
-            status_code=400,
-            detail="Unknown token or slot not in available_slots",
+        raise HTTPException(status_code=404, detail="Invalid or expired booking link")
+
+    slot_iso: str
+    if body.slot_id is not None:
+        try:
+            data = await client.get_table_rows("etac_meeting_slots")
+        except Exception as exc:
+            raise _to_http_error(exc) from exc
+        rows = data.get("rows") or []
+        match: dict[str, Any] | None = None
+        for r in rows:
+            if str(_twin_row_id(r)) != str(body.slot_id):
+                continue
+            match = r
+            break
+        if not match:
+            raise HTTPException(status_code=400, detail="Invalid slot_id")
+        sa = match.get("starts_at") or match.get("startsAt")
+        if not sa:
+            raise HTTPException(status_code=400, detail="Slot has no starts_at")
+        slot_iso = str(sa).strip()
+        ea = match.get("ends_at") or match.get("endsAt")
+        duration = _duration_minutes(slot_iso, str(ea) if ea else None)
+        lead_int = _coerce_int(session.lead_id)
+        if lead_int is None:
+            raise HTTPException(
+                status_code=400,
+                detail="lead_id must be numeric for etac_meetings.lead_id",
+            )
+        prod = _coerce_int(body.product_id) or _coerce_int(
+            match.get("product_id") or match.get("productId")
         )
+        name = (body.meeting_name or "").strip() or "Meeting"
+        # Twin schema for this org expects string fields for numeric columns.
+        values: dict[str, Any] = {
+            "lead_id": str(lead_int),
+            "name": name,
+            "starts_at": slot_iso,
+            "duration": str(duration),
+        }
+        if prod is not None:
+            values["product_id"] = str(prod)
+        try:
+            await client.insert_table_row("etac_meetings", values)
+            pk = _twin_row_id(match)
+            await client.delete_table_rows("etac_meeting_slots", [{"id": pk}])
+        except Exception as exc:
+            raise _to_http_error(exc) from exc
+        confirmed = confirm_slot(token, slot_iso, allow_any=True)
+        if not confirmed:
+            raise HTTPException(status_code=500, detail="Session update failed")
+    else:
+        slot_iso = body.slot_start.strip()
+        if not slot_iso:
+            raise HTTPException(
+                status_code=400,
+                detail="slot_start is required when slot_id is omitted",
+            )
+        confirmed = confirm_slot(token, slot_iso)
+        if not confirmed:
+            raise HTTPException(
+                status_code=400,
+                detail="Unknown token or slot not in available_slots",
+            )
+
     booking_url = _public_booking_url(session.token)
     payload = BookingConfirmedPayload(
         lead_id=session.lead_id,
         email=session.email,
-        selected_slot=session.selected_slot or slot,
+        selected_slot=session.selected_slot or slot_iso,
         booking_token=session.token,
     )
     notify = await _post_happyrobot_outbound(payload.model_dump())
