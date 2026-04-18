@@ -39,13 +39,13 @@ function Sidebar() {
   const location = useLocation();
   return (
     <aside className="w-64 shrink-0 m-3 mr-0 bg-sidebar rounded-3xl border border-sidebar-border shadow-card flex flex-col">
-      <div className="p-6 flex items-center gap-3">
+      <NavLink to="/" className="mx-3 mt-3 rounded-2xl p-3 flex items-center gap-3 transition-colors hover:bg-muted/70">
         <img src="/IMG_0615.PNG" alt="Etac logo" className="size-14 shrink-0 scale-125 object-cover" />
         <div>
           <div className="font-bold tracking-tight text-lg leading-none">Etac</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Product Sales</div>
         </div>
-      </div>
+      </NavLink>
 
       <nav className="flex-1 px-3 flex flex-col gap-1">
         <div className="px-4 py-2 text-xs font-display font-semibold uppercase tracking-widest text-muted-foreground mt-2">Workspace</div>
