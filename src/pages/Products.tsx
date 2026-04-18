@@ -1,7 +1,7 @@
-import { useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { products, leads, STATUS_COLUMNS } from "@/data/mock";
+import { STATUS_COLUMNS } from "@/data/mock";
 import { FolderKanban, ArrowRight, Plus, Users, TrendingUp } from "lucide-react";
 import {
   Dialog,
@@ -12,9 +12,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { createProduct, getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
 
 export default function Products() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [leads, setLeads] = useState<LeadRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState({
     name: "",
     description: "",
@@ -22,6 +28,63 @@ export default function Products() {
     price: "",
     texture: "",
   });
+  const canSubmit = draft.name.trim() !== "" && draft.price.trim() !== "" && !isSaving;
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [productRows, leadRows] = await Promise.all([getProducts(), getLeads()]);
+      setProducts(productRows);
+      setLeads(leadRows);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load products");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadData();
+  }, []);
+
+  const leadsByProductId = useMemo(() => {
+    const map = new Map<string, LeadRow[]>();
+    leads.forEach((lead) => {
+      const productId = (lead as LeadRow & { product_id?: string | number }).product_id;
+      if (productId === undefined || productId === null) return;
+      const key = String(productId);
+      const current = map.get(key) ?? [];
+      current.push(lead);
+      map.set(key, current);
+    });
+    return map;
+  }, [leads]);
+
+  const handleCreateProduct = async () => {
+    const price = Number(draft.price);
+    if (!Number.isFinite(price)) {
+      setError("Price must be a valid number.");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      await createProduct({
+        name: draft.name.trim(),
+        description: draft.description.trim() || undefined,
+        price,
+        texture: draft.texture.trim() || undefined,
+      });
+      setDraft({ name: "", description: "", objective: "", price: "", texture: "" });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create product");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <AppShell>
@@ -123,20 +186,29 @@ export default function Products() {
                     Cancel
                   </button>
                 </DialogClose>
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold opacity-60 cursor-not-allowed"
-                >
-                  Create Product
-                </button>
+                <DialogClose asChild>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (canSubmit) void handleCreateProduct();
+                    }}
+                    disabled={!canSubmit}
+                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isSaving ? "Creating..." : "Create Product"}
+                  </button>
+                </DialogClose>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </header>
 
+        {error && <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>}
+        {isLoading && <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">Loading products...</div>}
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {products.map((p) => {
-            const productLeads = leads.filter((l) => l.productId === p.id);
+            const productLeads = leadsByProductId.get(String(p.id)) ?? [];
             const qualified = productLeads.filter((l) => l.status === "qualified" || l.status === "meeting").length;
             const conv = productLeads.length ? Math.round((qualified / productLeads.length) * 100) : 0;
 
@@ -155,7 +227,7 @@ export default function Products() {
 
                 <div>
                   <div className="font-bold tracking-tight text-lg leading-tight group-hover:text-primary transition-colors">{p.name}</div>
-                  <div className="text-sm text-muted-foreground mt-1.5 text-pretty">{p.description}</div>
+                  <div className="text-sm text-muted-foreground mt-1.5 text-pretty">{p.description ?? "No description yet."}</div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
@@ -174,6 +246,9 @@ export default function Products() {
               </button>
             );
           })}
+          {!isLoading && products.length === 0 && (
+            <div className="rounded-3xl border border-border bg-card p-6 text-sm text-muted-foreground">No products found.</div>
+          )}
         </div>
       </div>
     </AppShell>
