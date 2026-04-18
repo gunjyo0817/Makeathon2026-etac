@@ -1,16 +1,84 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { getProductById, leads } from "@/data/mock";
+import type { LeadStatus, Temperature } from "@/data/mock";
 import { ArrowLeft, Box, FileText, Tag, Users } from "lucide-react";
 import { StatusBadge, TemperatureBadge } from "@/components/sales/Badges";
+import { getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
 
 export default function ProductDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const product = id ? getProductById(id) : undefined;
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [leads, setLeads] = useState<LeadRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const productLeads = useMemo(() => leads.filter((lead) => lead.productId === id), [id]);
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [productRows, leadRows] = await Promise.all([getProducts(), getLeads()]);
+        setProducts(productRows);
+        setLeads(leadRows);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load product details");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadData();
+  }, []);
+
+  const product = useMemo(() => {
+    if (!id) return undefined;
+    return products.find((item) => String(item.id) === id);
+  }, [id, products]);
+
+  const productLeads = useMemo(() => {
+    if (!id) return [];
+    return leads.filter((lead) => String(lead.product_id ?? "") === id);
+  }, [id, leads]);
+
+  const normalizeStatus = (status?: string): LeadStatus => {
+    if (status === "new" || status === "contacted" || status === "responded" || status === "qualified" || status === "meeting" || status === "closed") {
+      return status;
+    }
+    return "new";
+  };
+
+  const tempFromStatus = (status: LeadStatus): Temperature => {
+    if (status === "qualified" || status === "meeting") return "hot";
+    if (status === "contacted" || status === "responded") return "warm";
+    return "cold";
+  };
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="p-10 max-w-2xl mx-auto">
+          <div className="bg-card border border-border rounded-3xl p-10 text-center shadow-card text-sm text-muted-foreground">
+            Loading product details...
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppShell>
+        <div className="p-10 max-w-2xl mx-auto">
+          <div className="bg-card border border-destructive/30 rounded-3xl p-10 text-center shadow-card">
+            <h2 className="text-lg font-bold text-destructive">Failed to load product</h2>
+            <p className="text-sm text-muted-foreground mt-2">{error}</p>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!product || !id) {
     return (
@@ -25,7 +93,7 @@ export default function ProductDetail() {
     );
   }
 
-  const createdAt = new Date(product.createdAt).toLocaleString([], {
+  const createdAt = new Date(product.created_at ?? Date.now()).toLocaleString([], {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -81,10 +149,10 @@ export default function ProductDetail() {
             </div>
           </div>
           <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoCard label="Product ID" value={product.id} />
+            <InfoCard label="Product ID" value={String(product.id)} />
             <InfoCard label="Created time" value={createdAt} />
             <InfoCard label="Price" value={`$${product.price}`} />
-            <InfoCard label="Texture" value={product.texture} />
+            <InfoCard label="Texture" value={product.texture ?? "-"} />
           </div>
         </section>
 
@@ -100,8 +168,8 @@ export default function ProductDetail() {
           </div>
           <div className="p-5 grid grid-cols-1 gap-4">
             <InfoCard label="Name" value={product.name} />
-            <InfoCard label="Description" value={product.description} />
-            <InfoCard label="Objective" value={product.objective} />
+            <InfoCard label="Description" value={product.description ?? "-"} />
+            <InfoCard label="Objective" value="-" />
           </div>
         </section>
 
@@ -128,7 +196,10 @@ export default function ProductDetail() {
             <div className="p-5 text-sm text-muted-foreground">No leads are linked to this product yet.</div>
           ) : (
             <div className="divide-y divide-border">
-              {productLeads.slice(0, 6).map((lead) => (
+              {productLeads.slice(0, 6).map((lead) => {
+                const status = normalizeStatus(lead.status);
+                const temperature = tempFromStatus(status);
+                return (
                 <button
                   key={lead.id}
                   onClick={() => navigate(`/leads/${lead.id}`)}
@@ -136,18 +207,19 @@ export default function ProductDetail() {
                 >
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
-                      <div className="font-semibold leading-tight">{lead.name}</div>
+                      <div className="font-semibold leading-tight">{lead.full_name}</div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {lead.company} · {lead.role}
+                        {lead.company ?? "-"} · {lead.email ?? lead.phone ?? "-"}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <TemperatureBadge temp={lead.temperature} />
-                      <StatusBadge status={lead.status} />
+                      <TemperatureBadge temp={temperature} />
+                      <StatusBadge status={status} />
                     </div>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
