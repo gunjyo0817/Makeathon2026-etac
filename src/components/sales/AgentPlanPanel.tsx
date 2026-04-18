@@ -1,6 +1,6 @@
 import { type AgentAction } from "@/data/mock";
 import { PriorityBadge } from "./Badges";
-import { Sparkles, Pencil, Clock } from "lucide-react";
+import { Sparkles, Pencil, Clock, Phone } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/format";
 
 export function AgentPlanPanel({ actions }: { actions: AgentAction[] }) {
@@ -21,10 +21,17 @@ export function AgentPlanPanel({ actions }: { actions: AgentAction[] }) {
           <div className="px-5 py-8 text-sm text-muted-foreground text-center">No upcoming actions.</div>
         )}
         {actions.map((a, i) => (
-          <div key={a.id} className="px-5 py-4 flex gap-4 border-b border-border last:border-b-0">
+          <div key={a.id} className="px-5 py-4 border-b border-border last:border-b-0">
+            <div
+              className={`flex gap-4 ${a.icon === "phone" ? "rounded-2xl border border-info/20 bg-info-soft/45 px-4 py-3" : ""}`}
+            >
             <div className="flex flex-col items-center">
-              <div className="size-7 rounded-full bg-primary-soft text-primary flex items-center justify-center text-xs font-bold tabular-nums">
-                {i + 1}
+              <div
+                className={`size-7 rounded-full flex items-center justify-center text-xs font-bold tabular-nums ${
+                  a.icon === "phone" ? "bg-white/85 text-info shadow-sm" : "bg-primary-soft text-primary"
+                }`}
+              >
+                {a.icon === "phone" ? <Phone className="size-3.5" /> : i + 1}
               </div>
               {i < actions.length - 1 && <div className="w-px flex-1 bg-border mt-2" />}
             </div>
@@ -44,6 +51,7 @@ export function AgentPlanPanel({ actions }: { actions: AgentAction[] }) {
                   Edit
                 </button>
               </div>
+            </div>
             </div>
           </div>
         ))}

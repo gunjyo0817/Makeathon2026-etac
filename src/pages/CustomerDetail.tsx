@@ -8,7 +8,15 @@ import { LeadStatusPanel } from "@/components/sales/LeadStatusPanel";
 import { AgentPlanPanel } from "@/components/sales/AgentPlanPanel";
 import { ControlPanel } from "@/components/sales/ControlPanel";
 import { UpcomingMeetings } from "@/components/sales/UpcomingMeetings";
-import { getLeads, getProducts, getTranscriptsForCustomer, type LeadRow, type ProductRow } from "@/lib/api";
+import {
+  getLatestConversationAssignmentForLead,
+  getLeads,
+  getProducts,
+  getTranscriptsForCustomer,
+  type LatestConversationAssignment,
+  type LeadRow,
+  type ProductRow,
+} from "@/lib/api";
 import { mapLeadRowToLead } from "@/lib/mapLeadRowToLead";
 import { dominantChannelFromMessages, transcriptRowsToMessages } from "@/lib/parseTranscriptToMessages";
 
@@ -16,6 +24,7 @@ export default function CustomerDetail() {
   const { id } = useParams();
   const routeId = id?.trim() ?? "";
   const [lead, setLead] = useState<Lead | null>(null);
+  const [latestAssignment, setLatestAssignment] = useState<LatestConversationAssignment | null>(null);
   const [productName, setProductName] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,20 +33,24 @@ export default function CustomerDetail() {
     const load = async () => {
       if (!routeId) {
         setLead(null);
+        setLatestAssignment(null);
         setIsLoading(false);
         return;
       }
       setIsLoading(true);
       setError(null);
       try {
-        const [leadRows, productRows, transcriptRows] = await Promise.all([
+        const [leadRows, productRows, transcriptRows, assignment] = await Promise.all([
           getLeads(),
           getProducts(),
           getTranscriptsForCustomer(routeId),
+          getLatestConversationAssignmentForLead(routeId),
         ]);
+        setLatestAssignment(assignment);
         const row = leadRows.find((l) => String(l.id) === routeId);
         if (!row) {
           setLead(null);
+          setLatestAssignment(null);
           setProductName(undefined);
           return;
         }
@@ -45,17 +58,42 @@ export default function CustomerDetail() {
         const messages = transcriptRowsToMessages(transcriptRows, base.name);
         const currentChannel =
           messages.length > 0 ? dominantChannelFromMessages(messages) : base.currentChannel;
-        setLead({ ...base, messages, currentChannel });
+        const followUpAction =
+          assignment.found && assignment.followUpDate
+            ? {
+                id: `follow-up-${routeId}`,
+                title: `Follow up date: ${new Date(assignment.followUpDate).toLocaleString([], {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}`,
+                reason: "Call the lead to continue the scheduled follow-up conversation.",
+                scheduledFor: assignment.followUpDate,
+                priority: "medium" as const,
+                icon: "phone" as const,
+              }
+            : null;
+        setLead({
+          ...base,
+          messages,
+          currentChannel,
+          actions: followUpAction ? [...base.actions, followUpAction] : base.actions,
+        });
         const pid = row.product_id ?? row.productId;
-        if (pid == null || pid === "") {
+        const assignedPid = assignment.assignedProductId;
+        const resolvedPid = pid == null || pid === "" ? assignedPid : pid;
+        if (resolvedPid == null || resolvedPid === "") {
           setProductName("Unassigned");
         } else {
-          const product = productRows.find((p: ProductRow) => String(p.id) === String(pid));
-          setProductName(product?.name ?? `Product #${pid}`);
+          const product = productRows.find((p: ProductRow) => String(p.id) === String(resolvedPid));
+          setProductName(product?.name ?? `Product #${resolvedPid}`);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load lead");
         setLead(null);
+        setLatestAssignment(null);
       } finally {
         setIsLoading(false);
       }

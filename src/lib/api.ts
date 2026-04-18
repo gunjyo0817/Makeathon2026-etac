@@ -109,10 +109,27 @@ export type TranscriptApiRow = {
   transcript?: string;
 };
 
+export type LatestConversationAssignment = {
+  leadId: string;
+  found: boolean;
+  assignedProductId: string | number | null;
+  followUpDate: string | null;
+  row: Record<string, unknown> | null;
+};
+
 export async function getTranscriptsForCustomer(customerId: string): Promise<TranscriptApiRow[]> {
   const q = encodeURIComponent(customerId.trim());
   const data = await request<TwinTableResponse<TranscriptApiRow>>(
     `/api/transcripts?customer_id=${q}`
   );
   return data.rows ?? [];
+}
+
+export async function getLatestConversationAssignmentForLead(
+  leadId: string
+): Promise<LatestConversationAssignment> {
+  const q = encodeURIComponent(leadId.trim());
+  return request<LatestConversationAssignment>(
+    `/api/conversations/latest-assignment?lead_id=${q}`
+  );
 }

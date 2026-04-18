@@ -79,6 +79,7 @@ export interface AgentAction {
   reason: string;
   scheduledFor: string; // ISO
   priority: "high" | "medium" | "low";
+  icon?: "phone";
 }
 
 export type AttentionReason = "no_response" | "objection_detected" | "needs_manual_review" | "scheduling_mismatch";

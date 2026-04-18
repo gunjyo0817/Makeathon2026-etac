@@ -59,6 +59,14 @@ def _to_http_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=500, detail=str(exc))
 
 
+def _pick(row: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        value = row.get(key)
+        if value is not None and value != "":
+            return value
+    return None
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     return {"service": settings.app_name, "health": "/health", "docs": "/docs"}
@@ -184,6 +192,48 @@ async def list_transcripts_for_customer(customer_id: str) -> Any:
             "kind": "table",
             "rows": filtered,
             "total": len(filtered),
+        }
+    except Exception as exc:
+        raise _to_http_error(exc) from exc
+
+
+@app.get("/api/conversations/latest-assignment")
+async def get_latest_conversation_assignment(lead_id: str) -> Any:
+    """Latest etac_conversation row for a lead, sorted by follow_up_date."""
+    lid = (lead_id or "").strip()
+    if not lid:
+        raise HTTPException(status_code=400, detail="lead_id is required")
+    try:
+        data = await client.get_table_rows("etac_conversation")
+        rows = data.get("rows") or []
+
+        def row_lead_id(row: dict[str, Any]) -> str:
+            value = _pick(row, "lead_id", "leadId")
+            return str(value) if value is not None else ""
+
+        def row_follow_up_date(row: dict[str, Any]) -> str:
+            value = _pick(row, "follow_up_date", "followUpDate")
+            return str(value) if value is not None else ""
+
+        matching = [row for row in rows if row_lead_id(row) == lid and row_follow_up_date(row)]
+        matching.sort(key=row_follow_up_date)
+        latest = matching[-1] if matching else None
+
+        if not latest:
+            return {
+                "leadId": lid,
+                "found": False,
+                "assignedProductId": None,
+                "followUpDate": None,
+                "row": None,
+            }
+
+        return {
+            "leadId": lid,
+            "found": True,
+            "assignedProductId": _pick(latest, "assigned_product_id", "assignedProductId"),
+            "followUpDate": row_follow_up_date(latest),
+            "row": latest,
         }
     except Exception as exc:
         raise _to_http_error(exc) from exc
