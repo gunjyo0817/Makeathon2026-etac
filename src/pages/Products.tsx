@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { STATUS_COLUMNS } from "@/data/mock";
-import { FolderKanban, ArrowRight, Plus, Users, TrendingUp } from "lucide-react";
+import { FolderKanban, ArrowRight, Plus } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -12,12 +11,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createProduct, getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
+import { createProduct, getProducts, type ProductRow } from "@/lib/api";
 
 export default function Products() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<ProductRow[]>([]);
-  const [leads, setLeads] = useState<LeadRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +32,8 @@ export default function Products() {
     setIsLoading(true);
     setError(null);
     try {
-      const [productRows, leadRows] = await Promise.all([getProducts(), getLeads()]);
+      const productRows = await getProducts();
       setProducts(productRows);
-      setLeads(leadRows);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load products");
     } finally {
@@ -47,19 +44,6 @@ export default function Products() {
   useEffect(() => {
     void loadData();
   }, []);
-
-  const leadsByProductId = useMemo(() => {
-    const map = new Map<string, LeadRow[]>();
-    leads.forEach((lead) => {
-      const productId = (lead as LeadRow & { product_id?: string | number }).product_id;
-      if (productId === undefined || productId === null) return;
-      const key = String(productId);
-      const current = map.get(key) ?? [];
-      current.push(lead);
-      map.set(key, current);
-    });
-    return map;
-  }, [leads]);
 
   const handleCreateProduct = async () => {
     const price = Number(draft.price);
@@ -208,10 +192,6 @@ export default function Products() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {products.map((p) => {
-            const productLeads = leadsByProductId.get(String(p.id)) ?? [];
-            const qualified = productLeads.filter((l) => l.status === "qualified" || l.status === "meeting").length;
-            const conv = productLeads.length ? Math.round((qualified / productLeads.length) * 100) : 0;
-
             return (
               <button
                 key={p.id}
@@ -229,20 +209,6 @@ export default function Products() {
                   <div className="font-bold tracking-tight text-lg leading-tight group-hover:text-primary transition-colors">{p.name}</div>
                   <div className="text-sm text-muted-foreground mt-1.5 text-pretty">{p.description ?? "No description yet."}</div>
                 </div>
-
-                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
-                  <Stat icon={Users} label="Leads" value={productLeads.length} />
-                  <Stat icon={TrendingUp} label="Qualified" value={qualified} />
-                  <Stat label="Interest" value={`${conv}%`} />
-                </div>
-
-                <div className="flex gap-1">
-                  {STATUS_COLUMNS.map((c) => {
-                    const count = productLeads.filter((l) => l.status === c.id).length;
-                    const pct = productLeads.length ? (count / productLeads.length) * 100 : 0;
-                    return <div key={c.id} className="h-1.5 rounded-full bg-primary/60" style={{ flex: pct || 0.05 }} title={`${c.label}: ${count}`} />;
-                  })}
-                </div>
               </button>
             );
           })}
@@ -252,18 +218,6 @@ export default function Products() {
         </div>
       </div>
     </AppShell>
-  );
-}
-
-function Stat({ icon: Icon, label, value }: { icon?: any; label: string; value: number | string }) {
-  return (
-    <div>
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-        {Icon && <Icon className="size-3" />}
-        {label}
-      </div>
-      <div className="text-lg font-bold tabular-nums mt-1">{value}</div>
-    </div>
   );
 }
 
