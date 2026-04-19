@@ -161,12 +161,14 @@ export default function Dashboard() {
     [dashboardMeetings, productId]
   );
 
-  const todaysMeetings = useMemo(
-    () =>
-      filteredMeetings
-        .filter((meeting) => isSameLocalDay(new Date(meeting.start), new Date()))
-        .sort((a, b) => a.start.localeCompare(b.start)),
+  const sortedMeetings = useMemo(
+    () => [...filteredMeetings].sort((a, b) => a.start.localeCompare(b.start)),
     [filteredMeetings]
+  );
+
+  const todaysMeetings = useMemo(
+    () => sortedMeetings.filter((meeting) => isSameLocalDay(new Date(meeting.start), new Date())),
+    [sortedMeetings]
   );
 
   const attentionItems = conversationsNeedingAttention;
@@ -212,7 +214,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
           <PipelineBoard leads={filteredLeads} browseHref={dashboardLeadHref} />
-          <CalendarPanel meetings={todaysMeetings} browseHref={dashboardMeetingHref} />
+          <CalendarPanel meetings={sortedMeetings} browseHref={dashboardMeetingHref} />
         </div>
       </div>
     </AppShell>
