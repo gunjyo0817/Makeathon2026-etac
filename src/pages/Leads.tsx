@@ -187,10 +187,10 @@ export default function Leads() {
 
   return (
     <AppShell>
-      <div className="px-8 pb-10 pt-2 flex flex-col gap-6 max-w-[1600px] mx-auto">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 lg:px-8">
         <header>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Leads</h1>
             <p className="text-muted-foreground mt-2 text-sm">
               {filtered.length} of {leads.length} lead records across all products.
             </p>
@@ -200,7 +200,7 @@ export default function Leads() {
         {isLoading && <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">Loading leads...</div>}
 
         <div className="bg-card border border-border rounded-3xl shadow-card overflow-hidden">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="text-xs text-muted-foreground">
               Filter by lead, company, product, and activity.
             </div>

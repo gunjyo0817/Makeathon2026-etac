@@ -26,9 +26,9 @@ export default function Analytics() {
 
   return (
     <AppShell>
-      <div className="px-8 pb-10 pt-2 flex flex-col gap-7 max-w-[1600px] mx-auto">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-8 pt-2 sm:gap-7 sm:px-6 sm:pb-10 lg:px-8">
         <header>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Analytics</h1>
           <p className="text-muted-foreground mt-2 text-sm">
             Performance of Etac assistants across active furniture products. Last 7 days.
           </p>
