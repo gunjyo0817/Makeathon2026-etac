@@ -162,16 +162,13 @@ export default function Dashboard() {
     [dashboardMeetings, productId]
   );
 
-  const todaysMeetings = useMemo(
-    () =>
-      filteredMeetings
-        .filter((meeting) => storedDateKey(meeting.start) === storedDateKey(new Date()))
-        .sort((a, b) => compareStoredDateTimes(a.start, b.start)),
+  const sortedMeetings = useMemo(
+    () => [...filteredMeetings].sort((a, b) => compareStoredDateTimes(a.start, b.start)),
     [filteredMeetings]
   );
 
   const todaysMeetings = useMemo(
-    () => sortedMeetings.filter((meeting) => isSameLocalDay(new Date(meeting.start), new Date())),
+    () => sortedMeetings.filter((meeting) => storedDateKey(meeting.start) === storedDateKey(new Date())),
     [sortedMeetings]
   );
 

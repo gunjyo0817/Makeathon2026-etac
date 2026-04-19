@@ -97,11 +97,13 @@ export default function Leads() {
       setIsLoading(true);
       setError(null);
       try {
-        const [productRows, leadRows, transcriptRows] = await Promise.all([
+        const [productRows, leadRows, transcriptRows, conversationRows] = await Promise.all([
           getProducts(),
           getLeads(),
           getTwinTableRows("etac_transcript"),
+          getTwinTableRows("etac_conversation"),
         ]);
+        const inferredProductByLeadId = inferProductByLeadId(leadRows, conversationRows);
         setProducts(productRows);
         setLeads(
           leadRows.map((lead: LeadRow) => {
@@ -109,7 +111,7 @@ export default function Leads() {
             const createdAt = lead.updated_at ?? lead.created_at ?? new Date().toISOString();
             return {
               id: String(lead.id),
-              productId: String((lead as LeadRow & { product_id?: string | number }).product_id ?? UNASSIGNED_PRODUCT_ID),
+              productId: inferredProductByLeadId.get(String(lead.id)) ?? UNASSIGNED_PRODUCT_ID,
               name: lead.full_name ?? "Unknown Lead",
               role: "Prospect",
               company: lead.company ?? "-",
@@ -377,6 +379,49 @@ export default function Leads() {
       </div>
     </AppShell>
   );
+}
+
+function inferProductByLeadId(
+  leads: LeadRow[],
+  conversationRows: Record<string, unknown>[]
+): Map<string, string> {
+  const inferred = new Map<string, string>();
+
+  for (const lead of leads) {
+    const directProductId = lead.product_id ?? lead.productId;
+    if (directProductId != null && directProductId !== "") {
+      inferred.set(String(lead.id), String(directProductId));
+    }
+  }
+
+  const latestConversationByLeadId = new Map<string, Record<string, unknown>>();
+  for (const row of conversationRows) {
+    const leadId = String(row.lead_id ?? row.leadId ?? "").trim();
+    if (!leadId) continue;
+    const current = latestConversationByLeadId.get(leadId);
+    const nextTs = conversationSortValue(row);
+    const currentTs = current ? conversationSortValue(current) : -Infinity;
+    if (!current || nextTs >= currentTs) latestConversationByLeadId.set(leadId, row);
+  }
+
+  for (const [leadId, row] of latestConversationByLeadId) {
+    const assignedProductId = row.assigned_product_id ?? row.assignedProductId;
+    if (assignedProductId != null && assignedProductId !== "" && !inferred.has(leadId)) {
+      inferred.set(leadId, String(assignedProductId));
+    }
+  }
+
+  return inferred;
+}
+
+function conversationSortValue(row: Record<string, unknown>): number {
+  const createdAt = Date.parse(String(row.created_at ?? row.createdAt ?? ""));
+  if (Number.isFinite(createdAt)) return createdAt;
+
+  const followUp = Date.parse(String(row.follow_up_date ?? row.followUpDate ?? ""));
+  if (Number.isFinite(followUp)) return followUp;
+
+  return -Infinity;
 }
 
 function SelectFilterHeader({
