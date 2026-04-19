@@ -171,10 +171,10 @@ export default function Dashboard() {
 
   return (
     <AppShell>
-      <div className="px-8 pb-10 pt-2 flex flex-col gap-7 max-w-[1600px] mx-auto">
-        <header className="flex items-end justify-between gap-6 flex-wrap">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-balance">Good morning, Elias.</h1>
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-8 pt-2 sm:gap-7 sm:px-6 sm:pb-10 lg:px-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+          <div className="min-w-0">
+            <h1 className="text-balance text-2xl font-bold tracking-tight sm:text-3xl">Good morning, Elias.</h1>
             <p className="text-muted-foreground mt-2 text-sm text-pretty">
               Etac is actively tracking <span className="text-foreground font-semibold">{filteredLeads.length} lead conversations</span> for you.
               {todaysMeetings[0] && (
@@ -188,12 +188,14 @@ export default function Dashboard() {
                 : "No meetings are booked for today yet."}
             </p>
           </div>
-          <ProductSelector
-            selectedId={productId}
-            onSelect={setProductId}
-            products={selectorProducts}
-            includeAll
-          />
+          <div className="w-full sm:w-auto sm:shrink-0 sm:self-end">
+            <ProductSelector
+              selectedId={productId}
+              onSelect={setProductId}
+              products={selectorProducts}
+              includeAll
+            />
+          </div>
         </header>
 
         {error && <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>}

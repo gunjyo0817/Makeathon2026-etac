@@ -95,7 +95,7 @@ export default function ProductDetail() {
 
   return (
     <AppShell>
-      <div className="px-8 pb-10 pt-2 flex flex-col gap-7 max-w-[1200px] mx-auto">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 pb-8 pt-2 sm:gap-7 sm:px-6 sm:pb-10 lg:px-8">
         <header className="flex items-start justify-between gap-6 flex-wrap">
           <div className="min-w-0">
             <button
@@ -110,7 +110,7 @@ export default function ProductDetail() {
                 <Box className="size-6" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{product.name}</h1>
                 <p className="text-muted-foreground mt-2 text-sm max-w-3xl text-pretty">{product.description}</p>
               </div>
             </div>
