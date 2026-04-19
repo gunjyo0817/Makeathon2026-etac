@@ -16,9 +16,9 @@ export default function Settings() {
 
   return (
     <AppShell>
-      <div className="px-8 pb-10 pt-2 flex flex-col gap-7 max-w-[1400px] mx-auto">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 pb-8 pt-2 sm:gap-7 sm:px-6 sm:pb-10 lg:px-8">
         <header>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Settings</h1>
           <p className="text-muted-foreground mt-2 text-sm">Manage your account, agents, and workspace preferences.</p>
         </header>
 

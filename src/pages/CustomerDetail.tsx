@@ -164,7 +164,7 @@ export default function CustomerDetail() {
 
   return (
     <AppShell>
-      <div className="px-8 pb-10 pt-2 flex flex-col gap-6 max-w-[1600px] mx-auto">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 pb-8 pt-2 sm:px-6 sm:pb-10 lg:px-8">
         <LeadHeader lead={lead} productName={productName} />
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
           <div className="flex flex-col gap-6 min-w-0">
