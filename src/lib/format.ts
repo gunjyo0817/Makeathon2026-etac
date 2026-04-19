@@ -1,5 +1,14 @@
+import {
+  formatDateInBerlin,
+  formatTimeInBerlin,
+  parseStoredDateTime,
+  storedDateKey,
+} from "@/lib/dateTime";
+
 export function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
+  const date = parseStoredDateTime(iso);
+  if (!date) return "";
+  const diff = Date.now() - date.getTime();
   const min = Math.round(diff / 60000);
   if (min < 1) return "just now";
   if (min < 60) return `${min}m ago`;
@@ -10,15 +19,13 @@ export function timeAgo(iso: string): string {
 }
 
 export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return formatTimeInBerlin(iso);
 }
 
 export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  return formatDateInBerlin(iso);
 }
 
 export function isToday(iso: string): boolean {
-  const d = new Date(iso);
-  const n = new Date();
-  return d.toDateString() === n.toDateString();
+  return storedDateKey(iso) === storedDateKey(new Date());
 }

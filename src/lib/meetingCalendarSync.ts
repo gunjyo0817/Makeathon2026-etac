@@ -1,5 +1,14 @@
 /** Map between Meetings grid (dateKey + "HH:mm" half-hour) and Twin `etac_meeting_slots` / `etac_meetings`. */
 
+import {
+  addMinutesToStoredDateTime,
+  buildStoredDateTime,
+  compareStoredDateTimes,
+  storedDateKey,
+  storedHalfHourSlot,
+  toStoredDateTimeString,
+} from "@/lib/dateTime";
+
 export function dateKeyLocal(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -33,15 +42,15 @@ export function availabilityFromTwinSlotRows(
 
     const startStr = String(row.starts_at ?? row.startsAt ?? "");
     if (!startStr) continue;
-    const endRaw = row.ends_at ?? row.endsAt;
-    const start = new Date(startStr);
-    const end = endRaw ? new Date(String(endRaw)) : new Date(start.getTime() + 30 * 60 * 1000);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+    const start = toStoredDateTimeString(startStr);
+    const end = row.ends_at ?? row.endsAt
+      ? toStoredDateTimeString(String(row.ends_at ?? row.endsAt ?? ""))
+      : addMinutesToStoredDateTime(start, 30);
+    if (!start || !end) continue;
 
-    for (let t = start.getTime(); t < end.getTime(); t += 30 * 60 * 1000) {
-      const cell = new Date(t);
-      const key = dateKeyLocal(cell);
-      const slot = halfHourSlotLabel(cell);
+    for (let cursor = start; compareStoredDateTimes(cursor, end) < 0; cursor = addMinutesToStoredDateTime(cursor, 30)) {
+      const key = storedDateKey(cursor);
+      const slot = storedHalfHourSlot(cursor);
       if (!byDate[key]) byDate[key] = new Set();
       byDate[key].add(slot);
     }
@@ -66,11 +75,14 @@ export function buildTwinSlotInsertsFromAvailability(
       const [y, mo, d] = dKey.split("-").map(Number);
       const [hh, mm] = slot.split(":").map(Number);
       if (!y || mo < 1 || mo > 12) continue;
-      const start = new Date(y, mo - 1, d, hh, mm, 0, 0);
-      const end = new Date(start.getTime() + 30 * 60 * 1000);
+      const start = buildStoredDateTime(
+        `${y.toString().padStart(4, "0")}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
+        `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`
+      );
+      const end = addMinutesToStoredDateTime(start, 30);
       out.push({
-        starts_at: start.toISOString(),
-        ends_at: end.toISOString(),
+        starts_at: start,
+        ends_at: end,
         product_id: productId,
       });
     }
@@ -159,22 +171,20 @@ export function expandTwinSlotOptionsToPickerCells(
 ): BookingPickerCell[] {
   const out: BookingPickerCell[] = [];
   for (const s of slots) {
-    const start = new Date(s.starts_at);
-    if (Number.isNaN(start.getTime())) continue;
-    const endMs = s.ends_at
-      ? new Date(String(s.ends_at)).getTime()
-      : start.getTime() + 30 * 60 * 1000;
-    if (!Number.isFinite(endMs) || endMs <= start.getTime()) continue;
-    for (let t = start.getTime(); t < endMs; t += 30 * 60 * 1000) {
-      const cellDate = new Date(t);
-      const dk = dateKeyLocal(cellDate);
-      const label = halfHourSlotLabel(cellDate);
+    const start = toStoredDateTimeString(s.starts_at);
+    const end = s.ends_at
+      ? toStoredDateTimeString(String(s.ends_at))
+      : addMinutesToStoredDateTime(start, 30);
+    if (!start || !end || compareStoredDateTimes(start, end) >= 0) continue;
+    for (let cursor = start; compareStoredDateTimes(cursor, end) < 0; cursor = addMinutesToStoredDateTime(cursor, 30)) {
+      const dk = storedDateKey(cursor);
+      const label = storedHalfHourSlot(cursor);
       out.push({
         cellKey: `${dk}_${label}`,
         dateKey: dk,
         slotLabel: label,
         pickId: s.id,
-        slotStartIso: new Date(t).toISOString(),
+        slotStartIso: cursor,
       });
     }
   }
@@ -184,18 +194,16 @@ export function expandTwinSlotOptionsToPickerCells(
 export function expandMemoryIsoSlotsToPickerCells(isos: string[]): BookingPickerCell[] {
   const out: BookingPickerCell[] = [];
   for (const raw of isos) {
-    const iso = raw.trim();
+    const iso = toStoredDateTimeString(raw.trim());
     if (!iso) continue;
-    const start = new Date(iso);
-    if (Number.isNaN(start.getTime())) continue;
-    const dk = dateKeyLocal(start);
-    const label = halfHourSlotLabel(start);
+    const dk = storedDateKey(iso);
+    const label = storedHalfHourSlot(iso);
     out.push({
       cellKey: `${dk}_${label}`,
       dateKey: dk,
       slotLabel: label,
       pickId: iso,
-      slotStartIso: start.toISOString(),
+      slotStartIso: iso,
     });
   }
   return out;

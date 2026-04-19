@@ -15,23 +15,12 @@ import {
   expandTwinSlotOptionsToPickerCells,
   visibleDatesFromPickerCells,
 } from "@/lib/meetingCalendarSync";
+import { compareStoredDateTimes, formatDateTimeInBerlin } from "@/lib/dateTime";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 function formatSlot(iso: string): string {
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(d);
-  } catch {
-    return iso;
-  }
+  return formatDateTimeInBerlin(iso) || iso;
 }
 
 function BookingPickGrid({
@@ -139,16 +128,15 @@ const LeadBooking = () => {
     onError: (e: Error) => toast.error(e.message || "Could not confirm"),
   });
 
-  const twinSlots = q.data?.twin_slots ?? [];
-
   const sortedMemorySlots = useMemo(() => {
     const slots = q.data?.available_slots ?? [];
-    return [...slots].sort((a, b) => a.localeCompare(b));
+    return [...slots].sort(compareStoredDateTimes);
   }, [q.data?.available_slots]);
 
   const sortedTwinSlots = useMemo(() => {
-    return [...twinSlots].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  }, [twinSlots]);
+    const slots = q.data?.twin_slots ?? [];
+    return [...slots].sort((a, b) => compareStoredDateTimes(a.starts_at, b.starts_at));
+  }, [q.data?.twin_slots]);
 
   const useTwinUi = sortedTwinSlots.length > 0;
 

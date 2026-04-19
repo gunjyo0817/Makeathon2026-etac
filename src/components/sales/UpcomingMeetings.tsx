@@ -1,6 +1,7 @@
 import { type Meeting } from "@/data/mock";
 import { MeetingTypeBadge } from "./Badges";
 import { formatDate, formatTime } from "@/lib/format";
+import { formatInBerlin } from "@/lib/dateTime";
 import { Calendar, MapPin } from "lucide-react";
 
 export function UpcomingMeetings({ meetings }: { meetings: Meeting[] }) {
@@ -20,8 +21,8 @@ export function UpcomingMeetings({ meetings }: { meetings: Meeting[] }) {
         {meetings.map((m) => (
           <div key={m.id} className="px-5 py-4 flex items-center gap-4">
             <div className="size-12 rounded-xl bg-primary-soft text-primary flex flex-col items-center justify-center shrink-0">
-              <div className="text-[9px] uppercase tracking-wider font-semibold leading-none">{new Date(m.start).toLocaleDateString([], { month: "short" })}</div>
-              <div className="text-base font-bold tabular-nums leading-none mt-0.5">{new Date(m.start).getDate()}</div>
+              <div className="text-[9px] uppercase tracking-wider font-semibold leading-none">{formatInBerlin(m.start, { month: "short" })}</div>
+              <div className="text-base font-bold tabular-nums leading-none mt-0.5">{formatInBerlin(m.start, { day: "numeric" })}</div>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1"><MeetingTypeBadge type={m.type} /></div>
