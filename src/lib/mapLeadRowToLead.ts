@@ -1,5 +1,6 @@
 import type { Lead, LeadStatus, Temperature } from "@/data/mock";
 import type { LeadRow } from "@/lib/api";
+import { interestLevelFromIntentScore, resolveIntentScoreForLead } from "@/lib/transcriptIntentScore";
 
 export const UNASSIGNED_PRODUCT_ID = "unassigned";
 
@@ -42,6 +43,7 @@ function linkedProductId(row: LeadRow): string | null {
 export function mapLeadRowToLead(row: LeadRow): Lead {
   const status = normalizeLeadStatus(row.status);
   const pid = linkedProductId(row);
+  const intentScore = resolveIntentScoreForLead(row, []);
   return {
     id: String(row.id),
     productId: pid ?? UNASSIGNED_PRODUCT_ID,
@@ -52,10 +54,10 @@ export function mapLeadRowToLead(row: LeadRow): Lead {
     status,
     temperature: temperatureFromLeadStatus(status),
     lastInteractionAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
-    intentScore: intentFromLeadStatus(status),
+    intentScore,
     budget: "—",
     urgency: "Medium",
-    interestLevel: "Medium",
+    interestLevel: interestLevelFromIntentScore(intentScore),
     agentPaused: false,
     currentChannel: "email",
     availableChannels: ["email", "sms", "phone"],

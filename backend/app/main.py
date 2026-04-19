@@ -78,6 +78,59 @@ def _pick(row: dict[str, Any], *keys: str) -> Any:
     return None
 
 
+DEFAULT_INTENT_SCORE = 20
+
+
+def _transcript_customer_id(row: dict[str, Any]) -> str:
+    v = _pick(row, "customer_id", "customerId")
+    return str(v).strip() if v is not None else ""
+
+
+def _transcript_created_ms(row: dict[str, Any]) -> float:
+    ts = _pick(row, "created_at", "createdAt")
+    if not ts:
+        return 0.0
+    s = str(ts)
+    try:
+        from datetime import datetime
+
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        return datetime.fromisoformat(s).timestamp()
+    except Exception:
+        return 0.0
+
+
+def _interest_level_value(row: dict[str, Any]) -> float | None:
+    v = _pick(row, "interest_level", "interestLevel")
+    if v is None or v == "":
+        return None
+    try:
+        n = float(v)
+        if n != n:  # NaN
+            return None
+        return max(0.0, min(100.0, n))
+    except (TypeError, ValueError):
+        return None
+
+
+def _latest_intent_score_by_lead(transcript_rows: list[dict[str, Any]]) -> dict[str, int]:
+    """Latest non-null interest_level per customer_id (lead id), by created_at."""
+    best: dict[str, tuple[float, float]] = {}
+    for row in transcript_rows:
+        cid = _transcript_customer_id(row)
+        if not cid:
+            continue
+        iv = _interest_level_value(row)
+        if iv is None:
+            continue
+        ms = _transcript_created_ms(row)
+        prev = best.get(cid)
+        if prev is None or ms >= prev[0]:
+            best[cid] = (ms, iv)
+    return {k: int(round(v[1])) for k, v in best.items()}
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     return {"service": settings.app_name, "health": "/health", "docs": "/docs"}
@@ -165,7 +218,22 @@ async def create_product(payload: ProductCreate) -> Any:
 @app.get("/api/leads")
 async def list_leads() -> Any:
     try:
-        return await client.get_table_rows("etac_leads")
+        leads_data = await client.get_table_rows("etac_leads")
+        transcript_data = await client.get_table_rows("etac_transcript")
+        rows = list(leads_data.get("rows") or [])
+        transcript_rows = transcript_data.get("rows") or []
+        latest = _latest_intent_score_by_lead(transcript_rows)
+        enriched: list[dict[str, Any]] = []
+        for row in rows:
+            r = dict(row)
+            lid = str(_pick(r, "id", "Id", "ID") or "")
+            r["intent_score"] = latest.get(lid, DEFAULT_INTENT_SCORE)
+            enriched.append(r)
+        return {
+            **leads_data,
+            "rows": enriched,
+            "total": len(enriched),
+        }
     except Exception as exc:
         raise _to_http_error(exc) from exc
 

@@ -8,7 +8,8 @@ import { ConversationAttentionPanel } from "@/components/sales/ConversationAtten
 import { conversationsNeedingAttention, type Lead, type LeadStatus, type Meeting, type Temperature } from "@/data/mock";
 import { getLeads, getProducts, getTwinTableRows, type LeadRow, type ProductRow } from "@/lib/api";
 import { mapTwinMeetingsToRecords } from "@/lib/meetingCalendarSync";
-import { intentFromLeadStatus, normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
+import { normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
+import { interestLevelFromIntentScore, resolveIntentScoreForLead } from "@/lib/transcriptIntentScore";
 
 
 const UNASSIGNED_PRODUCT_ID = "unassigned";
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [meetingRows, setMeetingRows] = useState<Record<string, unknown>[]>([]);
   const [conversationRows, setConversationRows] = useState<Record<string, unknown>[]>([]);
+  const [transcriptRows, setTranscriptRows] = useState<Record<string, unknown>[]>([]);
   const [productId, setProductId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,16 +37,18 @@ export default function Dashboard() {
       setIsLoading(true);
       setError(null);
       try {
-        const [productRows, leadRows, rawMeetings, rawConversations] = await Promise.all([
+        const [productRows, leadRows, rawMeetings, rawConversations, rawTranscripts] = await Promise.all([
           getProducts(),
           getLeads(),
           getTwinTableRows("etac_meetings"),
           getTwinTableRows("etac_conversation"),
+          getTwinTableRows("etac_transcript"),
         ]);
         setProducts(productRows);
         setLeads(leadRows);
         setMeetingRows(rawMeetings);
         setConversationRows(rawConversations);
+        setTranscriptRows(rawTranscripts);
         setProductId((current) => current || ALL_PRODUCTS_ID);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
@@ -121,6 +125,7 @@ export default function Dashboard() {
       leads.map((lead) => {
         const status = normalizeLeadStatus(lead.status);
         const pid = inferredProductByLeadId.get(String(lead.id)) ?? String(lead.product_id ?? lead.productId ?? UNASSIGNED_PRODUCT_ID);
+        const intentScore = resolveIntentScoreForLead(lead, transcriptRows);
         return {
           id: String(lead.id),
           productId: pid,
@@ -131,10 +136,10 @@ export default function Dashboard() {
           status,
           temperature: temperatureFromLeadStatus(status),
           lastInteractionAt: lead.updated_at ?? lead.created_at ?? new Date().toISOString(),
-          intentScore: intentFromLeadStatus(status),
+          intentScore,
           budget: "-",
           urgency: "Medium",
-          interestLevel: status === "meeting" || status === "qualified" ? "High" : "Medium",
+          interestLevel: interestLevelFromIntentScore(intentScore),
           agentPaused: false,
           currentChannel: "phone",
           availableChannels: ["phone"],
@@ -143,7 +148,7 @@ export default function Dashboard() {
           meetings: dashboardMeetings.filter((meeting) => meeting.leadId === String(lead.id)),
         };
       }),
-    [dashboardMeetings, inferredProductByLeadId, leads]
+    [dashboardMeetings, inferredProductByLeadId, leads, transcriptRows]
   );
 
   const filteredLeads = useMemo(
