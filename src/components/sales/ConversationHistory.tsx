@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { type Channel, type Lead, type Message } from "@/data/mock";
 import { formatTime, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -118,18 +118,21 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
                       {messages.length} messages
                     </div>
                   </div>
-                  <div className="p-4 flex-1 overflow-y-auto scrollbar-thin">
+                  <MessageViewport autoScrollKey={`${lead.id}:${channel}:${isSplitView ? "split" : "single"}`}>
                     <MessageList messages={messages} channelLabel={meta.label} />
-                  </div>
+                  </MessageViewport>
                 </div>
               );
             })}
           </div>
         </div>
       ) : (
-        <div className="px-5 py-6 flex flex-col gap-5 max-h-[520px] overflow-y-auto scrollbar-thin">
+        <MessageViewport
+          className="px-5 py-6 flex flex-col gap-5 max-h-[520px]"
+          autoScrollKey={`${lead.id}:${selectedChannel}:${isSplitView ? "split" : "single"}`}
+        >
           <MessageList messages={visibleMessages} channelLabel={currentChannel.label} />
-        </div>
+        </MessageViewport>
       )}
 
       <div className="border-t border-border p-3 bg-muted/40">
@@ -138,6 +141,30 @@ export function ConversationHistory({ lead }: { lead: Lead }) {
           Etac AI is monitoring {lead.name}'s {isSplitView ? "multi-channel" : currentChannel.label.toLowerCase()} conversation and can continue the follow-up automatically.
         </div>
       </div>
+    </div>
+  );
+}
+
+function MessageViewport({
+  children,
+  autoScrollKey,
+  className,
+}: {
+  children: ReactNode;
+  autoScrollKey: string;
+  className?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [autoScrollKey]);
+
+  return (
+    <div ref={containerRef} className={cn("overflow-y-auto scrollbar-thin", className)}>
+      {children}
     </div>
   );
 }

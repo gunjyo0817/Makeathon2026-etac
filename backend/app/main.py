@@ -278,7 +278,7 @@ async def list_transcripts_for_customer(customer_id: str) -> Any:
 
 @app.get("/api/conversations/latest-assignment")
 async def get_latest_conversation_assignment(lead_id: str) -> Any:
-    """Latest etac_conversation row for a lead, sorted by follow_up_date."""
+    """Latest etac_conversation row for a lead, preferring created_at."""
     lid = (lead_id or "").strip()
     if not lid:
         raise HTTPException(status_code=400, detail="lead_id is required")
@@ -290,12 +290,14 @@ async def get_latest_conversation_assignment(lead_id: str) -> Any:
             value = _pick(row, "lead_id", "leadId")
             return str(value) if value is not None else ""
 
-        def row_follow_up_date(row: dict[str, Any]) -> str:
-            value = _pick(row, "follow_up_date", "followUpDate")
+        def row_sort_value(row: dict[str, Any]) -> str:
+            value = _pick(row, "created_at", "createdAt")
+            if value is None or value == "":
+                value = _pick(row, "follow_up_date", "followUpDate")
             return str(value) if value is not None else ""
 
-        matching = [row for row in rows if row_lead_id(row) == lid and row_follow_up_date(row)]
-        matching.sort(key=row_follow_up_date)
+        matching = [row for row in rows if row_lead_id(row) == lid]
+        matching.sort(key=row_sort_value)
         latest = matching[-1] if matching else None
 
         if not latest:
@@ -311,7 +313,7 @@ async def get_latest_conversation_assignment(lead_id: str) -> Any:
             "leadId": lid,
             "found": True,
             "assignedProductId": _pick(latest, "assigned_product_id", "assignedProductId"),
-            "followUpDate": row_follow_up_date(latest),
+            "followUpDate": _pick(latest, "follow_up_date", "followUpDate"),
             "row": latest,
         }
     except Exception as exc:
