@@ -7,6 +7,7 @@ import { PipelineBoard } from "@/components/sales/PipelineBoard";
 import { ConversationAttentionPanel } from "@/components/sales/ConversationAttentionPanel";
 import { conversationsNeedingAttention, type Lead, type LeadStatus, type Meeting, type Temperature } from "@/data/mock";
 import { getLeads, getProducts, getTwinTableRows, type LeadRow, type ProductRow } from "@/lib/api";
+import { compareStoredDateTimes, formatTimeInBerlin, storedDateKey } from "@/lib/dateTime";
 import { mapTwinMeetingsToRecords } from "@/lib/meetingCalendarSync";
 import { normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
 import { interestLevelFromIntentScore, resolveIntentScoreForLead } from "@/lib/transcriptIntentScore";
@@ -117,7 +118,7 @@ export default function Dashboard() {
         durationMin: meeting.durationMin,
         productId: inferredProductByLeadId.get(meeting.leadId) ?? UNASSIGNED_PRODUCT_ID,
       })),
-    [inferredProductByLeadId, leadRowsSignature(leads), leads, meetingRows]
+    [inferredProductByLeadId, leads, meetingRows]
   );
 
   const dashboardLeads = useMemo<Lead[]>(
@@ -161,8 +162,11 @@ export default function Dashboard() {
     [dashboardMeetings, productId]
   );
 
-  const sortedMeetings = useMemo(
-    () => [...filteredMeetings].sort((a, b) => a.start.localeCompare(b.start)),
+  const todaysMeetings = useMemo(
+    () =>
+      filteredMeetings
+        .filter((meeting) => storedDateKey(meeting.start) === storedDateKey(new Date()))
+        .sort((a, b) => compareStoredDateTimes(a.start, b.start)),
     [filteredMeetings]
   );
 
@@ -188,10 +192,7 @@ export default function Dashboard() {
                 <span className="text-primary font-medium"> {todaysMeetings[0].customerName}</span>
               )}{" "}
               {todaysMeetings[0]
-                ? `call is booked for ${new Date(todaysMeetings[0].start).toLocaleTimeString([], {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })} today.`
+                ? `call is booked for ${formatTimeInBerlin(todaysMeetings[0].start)} today.`
                 : "No meetings are booked for today yet."}
             </p>
           </div>
@@ -221,14 +222,6 @@ export default function Dashboard() {
   );
 }
 
-function isSameLocalDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 function conversationSortValue(row: Record<string, unknown>): number {
   const followUp = Date.parse(String(row.follow_up_date ?? row.followUpDate ?? ""));
   if (Number.isFinite(followUp)) return followUp;
@@ -237,8 +230,4 @@ function conversationSortValue(row: Record<string, unknown>): number {
   if (Number.isFinite(createdAt)) return createdAt;
 
   return -Infinity;
-}
-
-function leadRowsSignature(rows: LeadRow[]): string {
-  return rows.map((row) => `${row.id}:${row.updated_at ?? row.created_at ?? ""}`).join("|");
 }

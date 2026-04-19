@@ -10,6 +10,16 @@ import {
   mapTwinMeetingsToRecords,
   twinSlotRowsToDeleteForProduct,
 } from "@/lib/meetingCalendarSync";
+import {
+  compareStoredDateTimes,
+  formatDateTimeInBerlin,
+  formatInBerlin,
+  formatTimeInBerlin,
+  normalizeDateTimeLocalValue,
+  storedDateKey,
+  storedHalfHourSlot,
+  toDateTimeLocalValue,
+} from "@/lib/dateTime";
 import { deleteTwinTableRows, getLeads, getTwinTableRows, insertTwinTableRow } from "@/lib/api";
 import { MeetingTypeBadge } from "@/components/sales/Badges";
 import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
@@ -126,7 +136,7 @@ export default function Meetings() {
     (): MeetingWithLead[] =>
       meetingRecords
         .filter((meeting) => meeting.productId === productId)
-        .sort((a, b) => a.start.localeCompare(b.start)),
+        .sort((a, b) => compareStoredDateTimes(a.start, b.start)),
     [meetingRecords, productId]
   );
 
@@ -145,7 +155,7 @@ export default function Meetings() {
   const meetingByDate = useMemo(() => {
     const map = new Map<string, typeof allMeetings>();
     allMeetings.forEach((meeting) => {
-      const key = dateKey(new Date(meeting.start));
+      const key = storedDateKey(meeting.start);
       const current = map.get(key) ?? [];
       current.push(meeting);
       map.set(key, current);
@@ -155,6 +165,8 @@ export default function Meetings() {
 
   const availability = availabilityByProduct[productId] ?? {};
   const hasSpotsDraftChanges = JSON.stringify(spotsDraft) !== JSON.stringify(availability);
+
+  const visibleDateKeys = useMemo(() => new Set(visibleDates.map((date) => dateKey(date))), [visibleDates]);
 
   const rangeLabel = useMemo(() => {
     if (viewMode === "month") {
@@ -168,20 +180,14 @@ export default function Meetings() {
   }, [anchorDate, viewMode, visibleDates]);
 
   const scopedMeetings = useMemo(
-    () =>
-      allMeetings.filter((meeting) => {
-        const day = stripTime(new Date(meeting.start));
-        const min = visibleDates[0];
-        const max = addDays(visibleDates[visibleDates.length - 1], 1);
-        return day >= min && day < max;
-      }),
-    [allMeetings, visibleDates]
+    () => allMeetings.filter((meeting) => visibleDateKeys.has(storedDateKey(meeting.start))),
+    [allMeetings, visibleDateKeys]
   );
 
   const groupedMeetings = useMemo(() => {
     const map = new Map<string, typeof scopedMeetings>();
     scopedMeetings.forEach((meeting) => {
-      const key = new Date(meeting.start).toDateString();
+      const key = storedDateKey(meeting.start);
       const current = map.get(key) ?? [];
       current.push(meeting);
       map.set(key, current);
@@ -291,9 +297,14 @@ export default function Meetings() {
     [meetingRecords, selectedMeeting]
   );
 
+  useEffect(() => {
+    setRescheduleDraft(selectedMeeting ? toDateTimeLocalValue(selectedMeeting.start) : "");
+  }, [selectedMeeting]);
+
   const applyReschedule = () => {
     if (!selectedMeetingRecord || !rescheduleDraft) return;
-    const iso = new Date(rescheduleDraft).toISOString();
+    const iso = normalizeDateTimeLocalValue(rescheduleDraft);
+    if (!iso) return;
     setMeetingRecords((prev) =>
       prev.map((meeting) => (meeting.id === selectedMeetingRecord.id ? { ...meeting, start: iso, status: "rescheduled" } : meeting))
     );
@@ -464,7 +475,7 @@ export default function Meetings() {
                 {groupedMeetings.map(([date, items]) => (
                 <div key={date}>
                   <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    {new Date(date).toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
+                    {formatInBerlin(date, { weekday: "long", month: "short", day: "numeric" })}
                   </div>
                   <div className="divide-y divide-border rounded-2xl border border-border overflow-hidden">
                     {items.map((meeting) => (
@@ -477,7 +488,7 @@ export default function Meetings() {
                           <div>
                             <div className="text-sm font-semibold">{meeting.customerName}</div>
                             <div className="text-xs text-muted-foreground mt-0.5">
-                              {new Date(meeting.start).toLocaleString([], { hour: "numeric", minute: "2-digit" })} - {meeting.company}
+                              {formatTimeInBerlin(meeting.start)} - {meeting.company}
                             </div>
                           </div>
                           <MeetingTypeBadge type={meeting.type} />
@@ -528,7 +539,7 @@ export default function Meetings() {
                   <div className="rounded-xl border border-border p-3 space-y-1.5 text-xs text-muted-foreground">
                     <div>
                       <span className="font-semibold text-foreground">Time: </span>
-                      {new Date(selectedMeeting.start).toLocaleString([], {
+                      {formatDateTimeInBerlin(selectedMeeting.start, {
                         weekday: "short",
                         month: "short",
                         day: "numeric",
@@ -629,7 +640,7 @@ function TimeGrid({
 }: {
   dates: Date[];
   timeSlots: string[];
-  meetingByDate: Map<string, any[]>;
+  meetingByDate: Map<string, MeetingWithLead[]>;
   availability: Record<string, string[]>;
   onToggleSpot: (date: Date, slot: string) => void;
   onCellMouseDown?: (date: Date, slot: string, isAvailable: boolean) => void;
@@ -639,12 +650,12 @@ function TimeGrid({
   editable: boolean;
 }) {
   const meetingsByDateSlot = useMemo(() => {
-    const map = new Map<string, any[]>();
+    const map = new Map<string, MeetingWithLead[]>();
     dates.forEach((date) => {
       const dKey = dateKey(date);
       const meetings = meetingByDate.get(dKey) ?? [];
       meetings.forEach((meeting) => {
-        const slot = toHalfHourSlot(new Date(meeting.start));
+        const slot = storedHalfHourSlot(meeting.start);
         const key = `${dKey}_${slot}`;
         const current = map.get(key) ?? [];
         current.push(meeting);
@@ -734,7 +745,7 @@ function MonthGrid({
   onDayClick,
 }: {
   dates: Date[];
-  meetingByDate: Map<string, any[]>;
+  meetingByDate: Map<string, MeetingWithLead[]>;
   availability: Record<string, string[]>;
   onDayClick: (date: Date) => void;
 }) {
@@ -775,12 +786,6 @@ function slotFromIndex(index: number) {
     .padStart(2, "0");
   const m = (totalMinutes % 60).toString().padStart(2, "0");
   return `${h}:${m}`;
-}
-
-function toHalfHourSlot(date: Date) {
-  const h = date.getHours().toString().padStart(2, "0");
-  const roundedMin = date.getMinutes() < 30 ? "00" : "30";
-  return `${h}:${roundedMin}`;
 }
 
 function startOfWeek(date: Date) {

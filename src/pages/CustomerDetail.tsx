@@ -18,6 +18,7 @@ import {
   type LeadRow,
   type ProductRow,
 } from "@/lib/api";
+import { formatDateTimeInBerlin } from "@/lib/dateTime";
 import { mapLeadRowToLead } from "@/lib/mapLeadRowToLead";
 import { interestLevelFromIntentScore, resolveIntentScoreForLead } from "@/lib/transcriptIntentScore";
 import {
@@ -73,7 +74,7 @@ export default function CustomerDetail() {
           assignment.found && assignment.followUpDate
             ? {
                 id: `follow-up-${routeId}`,
-                title: `Follow up date: ${new Date(assignment.followUpDate).toLocaleString([], {
+                title: `Follow up date: ${formatDateTimeInBerlin(assignment.followUpDate, {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
