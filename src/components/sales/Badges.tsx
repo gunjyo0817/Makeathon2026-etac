@@ -20,7 +20,7 @@ const statusStyles: Record<LeadStatus, { label: string; bg: string; text: string
   contacted: { label: "Contacted", bg: "bg-info-soft", text: "text-info" },
   responded: { label: "Responded", bg: "bg-primary-soft", text: "text-primary" },
   qualified: { label: "Qualified", bg: "bg-warning-soft", text: "text-warning" },
-  meeting: { label: "Meeting Scheduled", bg: "bg-success-soft", text: "text-success" },
+  meeting: { label: "Trial scheduled", bg: "bg-success-soft", text: "text-success" },
   closed: { label: "Closed", bg: "bg-foreground/10", text: "text-foreground" },
 };
 

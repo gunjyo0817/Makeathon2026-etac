@@ -1,7 +1,7 @@
 import { type Meeting } from "@/data/mock";
 import { MeetingTypeBadge } from "./Badges";
 import { formatDate, formatTime } from "@/lib/format";
-import { Calendar, Video } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 
 export function UpcomingMeetings({ meetings }: { meetings: Meeting[] }) {
   if (meetings.length === 0) return null;
@@ -12,7 +12,7 @@ export function UpcomingMeetings({ meetings }: { meetings: Meeting[] }) {
           <Calendar className="size-4" />
         </div>
         <div>
-          <div className="text-sm font-bold leading-none">Upcoming Meetings</div>
+          <div className="text-sm font-bold leading-none">Upcoming trials</div>
           <div className="text-[11px] text-muted-foreground mt-1">{meetings.length} scheduled</div>
         </div>
       </div>
@@ -26,7 +26,7 @@ export function UpcomingMeetings({ meetings }: { meetings: Meeting[] }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1"><MeetingTypeBadge type={m.type} /></div>
               <div className="text-xs font-semibold">{formatDate(m.start)} · {formatTime(m.start)} · {m.durationMin}min</div>
-              <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1 mt-0.5"><Video className="size-3" /> Video call</div>
+              <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1 mt-0.5"><MapPin className="size-3" /> In-person</div>
             </div>
           </div>
         ))}

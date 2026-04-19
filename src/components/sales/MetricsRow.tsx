@@ -63,9 +63,9 @@ export function MetricsRow({
       href: isAllProducts ? "/leads?status=qualified" : `/leads?productId=${productQuery}&status=qualified`,
     },
     {
-      label: "Scheduled Meetings",
+      label: "Scheduled trials",
       value: sortedMeetings.length,
-      delta: sortedMeetings[0] ? `Next: ${formatMeetingTime(sortedMeetings[0].start)}` : "No upcoming meetings",
+      delta: sortedMeetings[0] ? `Next: ${formatMeetingTime(sortedMeetings[0].start)}` : "No upcoming trials",
       deltaTone: "neutral" as const,
       icon: Calendar,
       href: isAllProducts ? "/meetings" : `/meetings?productId=${productQuery}`,

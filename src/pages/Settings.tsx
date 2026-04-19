@@ -118,7 +118,7 @@ function NotificationsSection() {
       <SectionHeader title="Notifications" desc="Decide what Etac should ping you about." />
       <div className="flex flex-col gap-3">
         <Toggle label="New hot leads" desc="When intent score crosses 80." value={hot} onChange={setHot} />
-        <Toggle label="Meeting booked" desc="A customer accepts a meeting time." value={meetings} onChange={setMeetings} />
+        <Toggle label="Trial booked" desc="A lead books an in-person trial." value={meetings} onChange={setMeetings} />
         <Toggle label="Daily digest" desc="Morning summary at 8:00 AM." value={digest} onChange={setDigest} />
         <Toggle label="Product updates" desc="Newsletters and feature announcements." value={marketing} onChange={setMarketing} />
       </div>
@@ -130,10 +130,10 @@ function IntegrationsSection() {
   const items = [
     { name: "Salesforce", desc: "Sync leads, contacts, and opportunities", connected: true },
     { name: "HubSpot", desc: "Two-way contact + deal sync", connected: false },
-    { name: "Google Calendar", desc: "Book meetings on your calendar", connected: true },
+    { name: "Google Calendar", desc: "Block in-person trials on your calendar", connected: true },
     { name: "Slack", desc: "Notifications in your sales channel", connected: true },
     { name: "Gmail", desc: "Send replies from your address", connected: false },
-    { name: "Zoom", desc: "Auto-create meeting links", connected: true },
+    { name: "Zoom", desc: "Auto-create video links for hybrid follow-ups", connected: true },
   ];
   return (
     <>

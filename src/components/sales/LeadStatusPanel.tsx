@@ -57,5 +57,5 @@ export function LeadStatusPanel({ lead }: { lead: Lead }) {
 }
 
 function stageLabel(s: Lead["status"]) {
-  return { new: "New Lead", contacted: "Contacted", responded: "Responded", qualified: "Qualified", meeting: "Meeting Scheduled", closed: "Closed" }[s];
+  return { new: "New Lead", contacted: "Contacted", responded: "Responded", qualified: "Qualified", meeting: "Trial scheduled", closed: "Closed" }[s];
 }
