@@ -12,6 +12,8 @@ export type TranscriptRow = {
   Summary?: string;
   notes?: string;
   note?: string;
+  interest_level?: number | null;
+  interestLevel?: number | null;
 };
 
 type TranscriptTurn = {

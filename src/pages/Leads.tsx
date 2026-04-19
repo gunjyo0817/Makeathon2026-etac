@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Building2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
-import { intentFromLeadStatus, normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
+import { getLeads, getProducts, getTwinTableRows, type LeadRow, type ProductRow } from "@/lib/api";
+import { normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
+import { resolveIntentScoreForLead } from "@/lib/transcriptIntentScore";
 
 type UiLead = {
   id: string;
@@ -96,7 +97,11 @@ export default function Leads() {
       setIsLoading(true);
       setError(null);
       try {
-        const [productRows, leadRows] = await Promise.all([getProducts(), getLeads()]);
+        const [productRows, leadRows, transcriptRows] = await Promise.all([
+          getProducts(),
+          getLeads(),
+          getTwinTableRows("etac_transcript"),
+        ]);
         setProducts(productRows);
         setLeads(
           leadRows.map((lead: LeadRow) => {
@@ -110,7 +115,7 @@ export default function Leads() {
               company: lead.company ?? "-",
               status,
               temperature: temperatureFromLeadStatus(status),
-              intentScore: intentFromLeadStatus(status),
+              intentScore: resolveIntentScoreForLead(lead, transcriptRows),
               lastInteractionAt: createdAt,
             };
           })

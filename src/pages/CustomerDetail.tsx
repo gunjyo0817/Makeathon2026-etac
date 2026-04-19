@@ -20,6 +20,7 @@ import {
 } from "@/lib/api";
 import { formatDateTimeInBerlin } from "@/lib/dateTime";
 import { mapLeadRowToLead } from "@/lib/mapLeadRowToLead";
+import { interestLevelFromIntentScore, resolveIntentScoreForLead } from "@/lib/transcriptIntentScore";
 import {
   dominantChannelFromMessages,
   transcriptRowsToHistoryActions,
@@ -64,6 +65,7 @@ export default function CustomerDetail() {
           return;
         }
         const base = mapLeadRowToLead(row);
+        const intentScore = resolveIntentScoreForLead(row, transcriptRows);
         const messages = transcriptRowsToMessages(transcriptRows, base.name);
         const historyActions = transcriptRowsToHistoryActions(transcriptRows);
         const currentChannel =
@@ -88,6 +90,8 @@ export default function CustomerDetail() {
             : null;
         setLead({
           ...base,
+          intentScore,
+          interestLevel: interestLevelFromIntentScore(intentScore),
           messages,
           currentChannel,
           actions: [...historyActions, ...(followUpAction ? [followUpAction] : []), ...base.actions],

@@ -27,6 +27,8 @@ export type LeadRow = {
   phone?: string;
   company?: string;
   status?: string;
+  /** Set by API from latest non-null etac_transcript.interest_level, else 20. */
+  intent_score?: number | null;
 };
 
 function pick<T>(raw: Record<string, unknown>, keys: string[]): T | undefined {
@@ -46,6 +48,13 @@ export function normalizeLeadRow(raw: Record<string, unknown>): LeadRow | null {
   const fullName =
     pick<string>(raw, ["full_name", "fullName", "FullName", "name"]) ?? "Unknown Lead";
 
+  const intentRaw = pick<number | string>(raw, ["intent_score", "intentScore"]);
+  let intent_score: number | undefined;
+  if (intentRaw !== undefined) {
+    const n = typeof intentRaw === "number" ? intentRaw : Number(intentRaw);
+    if (Number.isFinite(n)) intent_score = n;
+  }
+
   return {
     id,
     created_at: pick(raw, ["created_at", "createdAt", "CreatedAt"]),
@@ -56,6 +65,7 @@ export function normalizeLeadRow(raw: Record<string, unknown>): LeadRow | null {
     phone: pick(raw, ["phone", "Phone"]),
     company: pick(raw, ["company", "Company"]),
     status: pick(raw, ["status", "Status"]),
+    intent_score,
   };
 }
 
@@ -107,6 +117,8 @@ export type TranscriptApiRow = {
   customerId?: string | number;
   medium?: string;
   transcript?: string;
+  interest_level?: number | null;
+  interestLevel?: number | null;
 };
 
 export type LatestConversationAssignment = {
