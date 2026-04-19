@@ -4,7 +4,7 @@
 
 # Etac
 
-**Etac** is our product: the AI-assisted **sales operations agent** and the branded console (“Etac · PRODUCT SALES”) that reps actually use. It is the layer where **catalog, leads, and conversation transcripts** stay in sync—backed by HappyRobot **Twin** data (`etac_products`, `etac_leads`, `etac_transcript`, …), not scattered spreadsheets or one-off scripts. Humans stay in control (pause, take over, review); Etac handles the heavy lifting of structured outreach and context.
+**Etac** is our product: the AI-assisted **sales operations agent** and the branded console (“Etac · PRODUCT SALES”) that reps actually use. It is the layer where **catalog, leads, and conversation transcripts** stay in sync—backed by HappyRobot **Twin** data (`etac_products`, `etac_leads`, `etac_transcript`, …), not scattered spreadsheets or one-off scripts. Humans stay in control (pause, take over, review); Etac handles the heavy lifting of structured outreach and context. 
 
 ---
 
