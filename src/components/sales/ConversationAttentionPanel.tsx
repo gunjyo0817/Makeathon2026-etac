@@ -1,9 +1,15 @@
 import type { AttentionReason, ConversationAttentionItem } from "@/data/mock";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
-export function ConversationAttentionPanel({ items }: { items: ConversationAttentionItem[] }) {
+export function ConversationAttentionPanel({
+  items,
+  browseHref,
+}: {
+  items: ConversationAttentionItem[];
+  browseHref?: string;
+}) {
   const navigate = useNavigate();
 
   return (
@@ -13,10 +19,22 @@ export function ConversationAttentionPanel({ items }: { items: ConversationAtten
           <h2 className="text-lg font-bold tracking-tight">Conversations needing attention</h2>
           <p className="text-sm text-muted-foreground mt-1">Threads that require manual action or intervention.</p>
         </div>
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-warning-soft text-warning">
-          <AlertTriangle className="size-3.5" />
-          {items.length} open
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-warning-soft text-warning">
+            <AlertTriangle className="size-3.5" />
+            {items.length} open
+          </span>
+          {browseHref && (
+            <button
+              type="button"
+              onClick={() => navigate(browseHref)}
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+            >
+              View leads
+              <ArrowUpRight className="size-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {items.length === 0 ? (

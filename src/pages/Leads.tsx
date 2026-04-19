@@ -14,6 +14,7 @@ import {
 import { Building2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
+import { intentFromLeadStatus, normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
 
 type UiLead = {
   id: string;
@@ -61,15 +62,23 @@ export default function Leads() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const queryProductId = searchParams.get("productId");
+  const queryStatus = searchParams.get("status");
   const validQueryProductId = useMemo(() => {
     if (!queryProductId) return null;
     if (queryProductId === "all" || queryProductId === UNASSIGNED_PRODUCT_ID) return queryProductId;
     return products.some((product) => String(product.id) === queryProductId) ? queryProductId : null;
   }, [products, queryProductId]);
+  const validQueryStatus = useMemo(() => {
+    if (!queryStatus) return null;
+    if (["all", "new", "contacted", "responded", "qualified", "meeting", "closed"].includes(queryStatus)) {
+      return queryStatus as LeadStatus | "all";
+    }
+    return null;
+  }, [queryStatus]);
   const [leadQuery, setLeadQuery] = useState("");
   const [companyQuery, setCompanyQuery] = useState("");
   const [productId, setProductId] = useState<string>(validQueryProductId ?? "all");
-  const [status, setStatus] = useState<LeadStatus | "all">("all");
+  const [status, setStatus] = useState<LeadStatus | "all">(validQueryStatus ?? "all");
   const [temp, setTemp] = useState<Temperature | "all">("all");
   const [intentFilter, setIntentFilter] = useState<IntentFilter>("all");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
@@ -83,20 +92,6 @@ export default function Leads() {
     activityFilter !== "all";
 
   useEffect(() => {
-    const normalizeStatus = (status?: string): LeadStatus => {
-      if (!status) return "new";
-      if (["new", "contacted", "responded", "qualified", "meeting", "closed"].includes(status)) {
-        return status as LeadStatus;
-      }
-      return "new";
-    };
-
-    const normalizeTemp = (status: LeadStatus): Temperature => {
-      if (status === "qualified" || status === "meeting") return "hot";
-      if (status === "contacted" || status === "responded") return "warm";
-      return "cold";
-    };
-
     const loadData = async () => {
       setIsLoading(true);
       setError(null);
@@ -105,7 +100,7 @@ export default function Leads() {
         setProducts(productRows);
         setLeads(
           leadRows.map((lead: LeadRow) => {
-            const status = normalizeStatus(lead.status);
+            const status = normalizeLeadStatus(lead.status);
             const createdAt = lead.updated_at ?? lead.created_at ?? new Date().toISOString();
             return {
               id: String(lead.id),
@@ -114,8 +109,8 @@ export default function Leads() {
               role: "Prospect",
               company: lead.company ?? "-",
               status,
-              temperature: normalizeTemp(status),
-              intentScore: status === "qualified" || status === "meeting" ? 80 : status === "contacted" ? 60 : 40,
+              temperature: temperatureFromLeadStatus(status),
+              intentScore: intentFromLeadStatus(status),
               lastInteractionAt: createdAt,
             };
           })
@@ -142,6 +137,17 @@ export default function Leads() {
   }, [productId, queryProductId, validQueryProductId]);
 
   useEffect(() => {
+    if (validQueryStatus && validQueryStatus !== status) {
+      setStatus(validQueryStatus);
+      return;
+    }
+
+    if (!validQueryStatus && status !== "all") {
+      setStatus("all");
+    }
+  }, [status, queryStatus, validQueryStatus]);
+
+  useEffect(() => {
     const current = queryProductId ?? "all";
     if (current === productId) return;
 
@@ -150,6 +156,16 @@ export default function Leads() {
     else next.set("productId", productId);
     setSearchParams(next, { replace: true });
   }, [productId, queryProductId, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const current = queryStatus ?? "all";
+    if (current === status) return;
+
+    const next = new URLSearchParams(searchParams);
+    if (status === "all") next.delete("status");
+    else next.set("status", status);
+    setSearchParams(next, { replace: true });
+  }, [queryStatus, searchParams, setSearchParams, status]);
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {

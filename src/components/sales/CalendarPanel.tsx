@@ -1,10 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { todaysMeetings } from "@/data/mock";
+import type { Meeting } from "@/data/mock";
 import { formatTime } from "@/lib/format";
 import { MeetingTypeBadge } from "./Badges";
-import { Calendar, Video } from "lucide-react";
+import { ArrowUpRight, Calendar, Video } from "lucide-react";
 
-export function CalendarPanel() {
+export function CalendarPanel({
+  meetings,
+  browseHref,
+}: {
+  meetings: Meeting[];
+  browseHref?: string;
+}) {
   const navigate = useNavigate();
   return (
     <div className="bg-card border border-border rounded-3xl shadow-card flex flex-col overflow-hidden">
@@ -20,14 +26,26 @@ export function CalendarPanel() {
             </div>
           </div>
         </div>
-        <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">{todaysMeetings.length} trials</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">{meetings.length} trials</span>
+          {browseHref && (
+            <button
+              type="button"
+              onClick={() => navigate(browseHref)}
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+            >
+              Open calendar
+              <ArrowUpRight className="size-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col divide-y divide-border">
-        {todaysMeetings.length === 0 && (
+        {meetings.length === 0 && (
           <div className="px-5 py-8 text-center text-sm text-muted-foreground">No trials scheduled today.</div>
         )}
-        {todaysMeetings.map((m, i) => (
+        {meetings.map((m, i) => (
           <button
             key={m.id}
             onClick={() => navigate(`/leads/${m.leadId}`)}

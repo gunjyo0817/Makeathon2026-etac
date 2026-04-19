@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import type { LeadStatus, Temperature } from "@/data/mock";
 import { ArrowLeft, Box, FileText, Tag, Users } from "lucide-react";
 import { StatusBadge, TemperatureBadge } from "@/components/sales/Badges";
 import { getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
+import { normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
 
 export default function ProductDetail() {
   const navigate = useNavigate();
@@ -41,19 +41,6 @@ export default function ProductDetail() {
     if (!id) return [];
     return leads.filter((lead) => String(lead.product_id ?? "") === id);
   }, [id, leads]);
-
-  const normalizeStatus = (status?: string): LeadStatus => {
-    if (status === "new" || status === "contacted" || status === "responded" || status === "qualified" || status === "meeting" || status === "closed") {
-      return status;
-    }
-    return "new";
-  };
-
-  const tempFromStatus = (status: LeadStatus): Temperature => {
-    if (status === "qualified" || status === "meeting") return "hot";
-    if (status === "contacted" || status === "responded") return "warm";
-    return "cold";
-  };
 
   if (isLoading) {
     return (
@@ -197,8 +184,8 @@ export default function ProductDetail() {
           ) : (
             <div className="divide-y divide-border">
               {productLeads.slice(0, 6).map((lead) => {
-                const status = normalizeStatus(lead.status);
-                const temperature = tempFromStatus(status);
+                const status = normalizeLeadStatus(lead.status);
+                const temperature = temperatureFromLeadStatus(status);
                 return (
                 <button
                   key={lead.id}
