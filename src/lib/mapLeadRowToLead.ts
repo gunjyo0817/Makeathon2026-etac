@@ -3,20 +3,31 @@ import type { LeadRow } from "@/lib/api";
 
 export const UNASSIGNED_PRODUCT_ID = "unassigned";
 
-function normalizeStatus(status?: string): LeadStatus {
-  if (status === "new" || status === "contacted" || status === "responded" || status === "qualified" || status === "meeting" || status === "closed") {
-    return status;
+export function normalizeLeadStatus(status?: string): LeadStatus {
+  const normalized = String(status ?? "").trim().toLowerCase();
+  if (
+    normalized === "new" ||
+    normalized === "contacted" ||
+    normalized === "responded" ||
+    normalized === "qualified" ||
+    normalized === "meeting" ||
+    normalized === "closed"
+  ) {
+    return normalized;
+  }
+  if (normalized === "negotiating") {
+    return "qualified";
   }
   return "new";
 }
 
-function normalizeTemp(status: LeadStatus): Temperature {
+export function temperatureFromLeadStatus(status: LeadStatus): Temperature {
   if (status === "qualified" || status === "meeting") return "hot";
   if (status === "contacted" || status === "responded") return "warm";
   return "cold";
 }
 
-function intentFromStatus(status: LeadStatus): number {
+export function intentFromLeadStatus(status: LeadStatus): number {
   if (status === "qualified" || status === "meeting") return 80;
   if (status === "contacted") return 60;
   return 40;
@@ -29,7 +40,7 @@ function linkedProductId(row: LeadRow): string | null {
 }
 
 export function mapLeadRowToLead(row: LeadRow): Lead {
-  const status = normalizeStatus(row.status);
+  const status = normalizeLeadStatus(row.status);
   const pid = linkedProductId(row);
   return {
     id: String(row.id),
@@ -39,9 +50,9 @@ export function mapLeadRowToLead(row: LeadRow): Lead {
     company: row.company ?? "-",
     email: row.email ?? row.phone ?? "",
     status,
-    temperature: normalizeTemp(status),
+    temperature: temperatureFromLeadStatus(status),
     lastInteractionAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
-    intentScore: intentFromStatus(status),
+    intentScore: intentFromLeadStatus(status),
     budget: "—",
     urgency: "Medium",
     interestLevel: "Medium",

@@ -8,9 +8,11 @@ import { ConversationAttentionPanel } from "@/components/sales/ConversationAtten
 import { conversationsNeedingAttention, type Lead, type LeadStatus, type Meeting, type Temperature } from "@/data/mock";
 import { getLeads, getProducts, getTwinTableRows, type LeadRow, type ProductRow } from "@/lib/api";
 import { mapTwinMeetingsToRecords } from "@/lib/meetingCalendarSync";
+import { intentFromLeadStatus, normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
 
 
 const UNASSIGNED_PRODUCT_ID = "unassigned";
+const ALL_PRODUCTS_ID = "all";
 
 type SelectorProduct = {
   id: string;
@@ -23,6 +25,7 @@ export default function Dashboard() {
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [meetingRows, setMeetingRows] = useState<Record<string, unknown>[]>([]);
+  const [conversationRows, setConversationRows] = useState<Record<string, unknown>[]>([]);
   const [productId, setProductId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,15 +35,17 @@ export default function Dashboard() {
       setIsLoading(true);
       setError(null);
       try {
-        const [productRows, leadRows, rawMeetings] = await Promise.all([
+        const [productRows, leadRows, rawMeetings, rawConversations] = await Promise.all([
           getProducts(),
           getLeads(),
           getTwinTableRows("etac_meetings"),
+          getTwinTableRows("etac_conversation"),
         ]);
         setProducts(productRows);
         setLeads(leadRows);
         setMeetingRows(rawMeetings);
-        setProductId((current) => current || String(productRows[0]?.id ?? ""));
+        setConversationRows(rawConversations);
+        setProductId((current) => current || ALL_PRODUCTS_ID);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
       } finally {
@@ -51,23 +56,53 @@ export default function Dashboard() {
     void loadData();
   }, []);
 
+  const inferredProductByLeadId = useMemo(() => {
+    const inferred = new Map<string, string>();
+
+    for (const lead of leads) {
+      const directProductId = lead.product_id ?? lead.productId;
+      if (directProductId != null && directProductId !== "") {
+        inferred.set(String(lead.id), String(directProductId));
+      }
+    }
+
+    const latestConversationByLeadId = new Map<string, Record<string, unknown>>();
+    for (const row of conversationRows) {
+      const leadId = String(row.lead_id ?? row.leadId ?? "").trim();
+      if (!leadId) continue;
+      const current = latestConversationByLeadId.get(leadId);
+      const nextTs = conversationSortValue(row);
+      const currentTs = current ? conversationSortValue(current) : -Infinity;
+      if (!current || nextTs >= currentTs) latestConversationByLeadId.set(leadId, row);
+    }
+
+    for (const [leadId, row] of latestConversationByLeadId) {
+      const assignedProductId = row.assigned_product_id ?? row.assignedProductId;
+      if (assignedProductId != null && assignedProductId !== "" && !inferred.has(leadId)) {
+        inferred.set(leadId, String(assignedProductId));
+      }
+    }
+
+    return inferred;
+  }, [conversationRows, leads]);
+
   const selectorProducts = useMemo<SelectorProduct[]>(
     () =>
       products.map((product) => ({
         id: String(product.id),
         name: product.name,
         description: product.description,
-        leadCount: leads.filter((lead) => String(lead.product_id ?? lead.productId ?? UNASSIGNED_PRODUCT_ID) === String(product.id)).length,
+        leadCount: leads.filter((lead) => (inferredProductByLeadId.get(String(lead.id)) ?? UNASSIGNED_PRODUCT_ID) === String(product.id)).length,
       })),
-    [leads, products]
+    [inferredProductByLeadId, leads, products]
   );
 
-  const dashboardMeetings = useMemo<Meeting[]>(
+  const dashboardMeetings = useMemo<(Meeting & { productId: string })[]>(
     () =>
       mapTwinMeetingsToRecords(
         meetingRows,
         leads.map((lead) => ({ id: lead.id, full_name: lead.full_name, company: lead.company })),
-        productId || String(products[0]?.id ?? "")
+        UNASSIGNED_PRODUCT_ID
       ).map((meeting) => ({
         id: meeting.id,
         leadId: meeting.leadId,
@@ -76,15 +111,16 @@ export default function Dashboard() {
         type: meeting.type,
         start: meeting.start,
         durationMin: meeting.durationMin,
+        productId: inferredProductByLeadId.get(meeting.leadId) ?? UNASSIGNED_PRODUCT_ID,
       })),
-    [leadRowsSignature(leads), leads, meetingRows, productId, products]
+    [inferredProductByLeadId, leadRowsSignature(leads), leads, meetingRows]
   );
 
   const dashboardLeads = useMemo<Lead[]>(
     () =>
       leads.map((lead) => {
-        const status = normalizeStatus(lead.status);
-        const pid = String(lead.product_id ?? lead.productId ?? UNASSIGNED_PRODUCT_ID);
+        const status = normalizeLeadStatus(lead.status);
+        const pid = inferredProductByLeadId.get(String(lead.id)) ?? String(lead.product_id ?? lead.productId ?? UNASSIGNED_PRODUCT_ID);
         return {
           id: String(lead.id),
           productId: pid,
@@ -93,9 +129,9 @@ export default function Dashboard() {
           company: lead.company ?? "-",
           email: lead.email ?? "",
           status,
-          temperature: normalizeTemperature(status),
+          temperature: temperatureFromLeadStatus(status),
           lastInteractionAt: lead.updated_at ?? lead.created_at ?? new Date().toISOString(),
-          intentScore: intentScoreForStatus(status),
+          intentScore: intentFromLeadStatus(status),
           budget: "-",
           urgency: "Medium",
           interestLevel: status === "meeting" || status === "qualified" ? "High" : "Medium",
@@ -107,20 +143,17 @@ export default function Dashboard() {
           meetings: dashboardMeetings.filter((meeting) => meeting.leadId === String(lead.id)),
         };
       }),
-    [dashboardMeetings, leads]
+    [dashboardMeetings, inferredProductByLeadId, leads]
   );
 
   const filteredLeads = useMemo(
-    () => dashboardLeads.filter((lead) => lead.productId === productId),
+    () => (productId === ALL_PRODUCTS_ID ? dashboardLeads : dashboardLeads.filter((lead) => lead.productId === productId)),
     [dashboardLeads, productId]
   );
 
   const filteredMeetings = useMemo(
-    () => dashboardMeetings.filter((meeting) => {
-      const lead = dashboardLeads.find((item) => item.id === meeting.leadId);
-      return lead?.productId === productId;
-    }),
-    [dashboardLeads, dashboardMeetings, productId]
+    () => (productId === ALL_PRODUCTS_ID ? dashboardMeetings : dashboardMeetings.filter((meeting) => meeting.productId === productId)),
+    [dashboardMeetings, productId]
   );
 
   const todaysMeetings = useMemo(
@@ -133,8 +166,8 @@ export default function Dashboard() {
 
   const attentionItems = conversationsNeedingAttention;
 
-  const dashboardLeadHref = `/leads?productId=${encodeURIComponent(productId)}`;
-  const dashboardMeetingHref = `/meetings?productId=${encodeURIComponent(productId)}`;
+  const dashboardLeadHref = productId === ALL_PRODUCTS_ID ? "/leads" : `/leads?productId=${encodeURIComponent(productId)}`;
+  const dashboardMeetingHref = productId === ALL_PRODUCTS_ID ? "/meetings" : `/meetings?productId=${encodeURIComponent(productId)}`;
 
   return (
     <AppShell>
@@ -159,6 +192,7 @@ export default function Dashboard() {
             selectedId={productId}
             onSelect={setProductId}
             products={selectorProducts}
+            includeAll
           />
         </header>
 
@@ -178,28 +212,6 @@ export default function Dashboard() {
   );
 }
 
-function normalizeStatus(status?: string): LeadStatus {
-  if (!status) return "new";
-  if (["new", "contacted", "responded", "qualified", "meeting", "closed"].includes(status)) {
-    return status as LeadStatus;
-  }
-  return "new";
-}
-
-function normalizeTemperature(status: LeadStatus): Temperature {
-  if (status === "qualified" || status === "meeting") return "hot";
-  if (status === "contacted" || status === "responded") return "warm";
-  return "cold";
-}
-
-function intentScoreForStatus(status: LeadStatus): number {
-  if (status === "meeting") return 92;
-  if (status === "qualified") return 83;
-  if (status === "responded") return 68;
-  if (status === "contacted") return 54;
-  return 36;
-}
-
 function isSameLocalDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -208,6 +220,15 @@ function isSameLocalDay(a: Date, b: Date): boolean {
   );
 }
 
+function conversationSortValue(row: Record<string, unknown>): number {
+  const followUp = Date.parse(String(row.follow_up_date ?? row.followUpDate ?? ""));
+  if (Number.isFinite(followUp)) return followUp;
+
+  const createdAt = Date.parse(String(row.created_at ?? row.createdAt ?? ""));
+  if (Number.isFinite(createdAt)) return createdAt;
+
+  return -Infinity;
+}
 
 function leadRowsSignature(rows: LeadRow[]): string {
   return rows.map((row) => `${row.id}:${row.updated_at ?? row.created_at ?? ""}`).join("|");

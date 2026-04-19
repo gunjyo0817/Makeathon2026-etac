@@ -32,6 +32,7 @@ export function MetricsRow({
   meetings: MetricMeeting[];
 }) {
   const navigate = useNavigate();
+  const isAllProducts = productId === "all";
   const activeLeads = leads.filter((lead) => lead.status !== "closed");
   const qualifiedLeads = leads.filter((lead) => lead.status === "qualified" || lead.status === "meeting");
   const sortedMeetings = [...meetings].sort((a, b) => a.start.localeCompare(b.start));
@@ -51,7 +52,7 @@ export function MetricsRow({
       delta: `${Math.min(activeLeads.length, 6)} touched today`,
       deltaTone: "success" as const,
       icon: Users,
-      href: `/leads?productId=${productQuery}`,
+      href: isAllProducts ? "/leads" : `/leads?productId=${productQuery}`,
     },
     {
       label: "Qualified Leads",
@@ -59,7 +60,7 @@ export function MetricsRow({
       delta: `${qualifiedLeads.length} in consideration`,
       deltaTone: "success" as const,
       icon: CheckCircle2,
-      href: `/leads?productId=${productQuery}&status=qualified`,
+      href: isAllProducts ? "/leads?status=qualified" : `/leads?productId=${productQuery}&status=qualified`,
     },
     {
       label: "Scheduled Meetings",
@@ -67,7 +68,7 @@ export function MetricsRow({
       delta: sortedMeetings[0] ? `Next: ${formatMeetingTime(sortedMeetings[0].start)}` : "No upcoming meetings",
       deltaTone: "neutral" as const,
       icon: Calendar,
-      href: `/meetings?productId=${productQuery}`,
+      href: isAllProducts ? "/meetings" : `/meetings?productId=${productQuery}`,
     },
     {
       label: "Response Rate",

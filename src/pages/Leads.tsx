@@ -14,6 +14,7 @@ import {
 import { Building2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLeads, getProducts, type LeadRow, type ProductRow } from "@/lib/api";
+import { intentFromLeadStatus, normalizeLeadStatus, temperatureFromLeadStatus } from "@/lib/mapLeadRowToLead";
 
 type UiLead = {
   id: string;
@@ -91,20 +92,6 @@ export default function Leads() {
     activityFilter !== "all";
 
   useEffect(() => {
-    const normalizeStatus = (status?: string): LeadStatus => {
-      if (!status) return "new";
-      if (["new", "contacted", "responded", "qualified", "meeting", "closed"].includes(status)) {
-        return status as LeadStatus;
-      }
-      return "new";
-    };
-
-    const normalizeTemp = (status: LeadStatus): Temperature => {
-      if (status === "qualified" || status === "meeting") return "hot";
-      if (status === "contacted" || status === "responded") return "warm";
-      return "cold";
-    };
-
     const loadData = async () => {
       setIsLoading(true);
       setError(null);
@@ -113,7 +100,7 @@ export default function Leads() {
         setProducts(productRows);
         setLeads(
           leadRows.map((lead: LeadRow) => {
-            const status = normalizeStatus(lead.status);
+            const status = normalizeLeadStatus(lead.status);
             const createdAt = lead.updated_at ?? lead.created_at ?? new Date().toISOString();
             return {
               id: String(lead.id),
@@ -122,8 +109,8 @@ export default function Leads() {
               role: "Prospect",
               company: lead.company ?? "-",
               status,
-              temperature: normalizeTemp(status),
-              intentScore: status === "qualified" || status === "meeting" ? 80 : status === "contacted" ? 60 : 40,
+              temperature: temperatureFromLeadStatus(status),
+              intentScore: intentFromLeadStatus(status),
               lastInteractionAt: createdAt,
             };
           })
