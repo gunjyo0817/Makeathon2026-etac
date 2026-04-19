@@ -6,8 +6,6 @@
 
 **Etac** is our product: the AI-assisted **sales operations agent** and the branded console (“Etac · PRODUCT SALES”) that reps actually use. It is the layer where **catalog, leads, and conversation transcripts** stay in sync—backed by HappyRobot **Twin** data (`etac_products`, `etac_leads`, `etac_transcript`, …), not scattered spreadsheets or one-off scripts. Humans stay in control (pause, take over, review); Etac handles the heavy lifting of structured outreach and context.
 
-Etac 是我們對外產品名稱：不只是聊天機器人外掛，而是**業務每天進來操作的那個工作台**——串商品、名單與對話紀錄，並與後端 Twin API 對接。
-
 ---
 
 ## Makeathon Hangarian (this repository)
